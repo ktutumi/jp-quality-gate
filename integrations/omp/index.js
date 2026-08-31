@@ -122,6 +122,65 @@ async function runGate(text, signal) {
   }
 }
 
+function isNonNegativeInteger(value) {
+  return Number.isInteger(value) && value >= 0;
+}
+
+export function validateGateResult(result) {
+  if (!result || typeof result !== "object" || Array.isArray(result)) {
+    return "expected a JSON object";
+  }
+  if (typeof result.pass !== "boolean") {
+    return "missing boolean pass";
+  }
+
+  const summary = result.summary;
+  if (!summary || typeof summary !== "object" || Array.isArray(summary)) {
+    return "missing summary object";
+  }
+  for (const key of ["errors", "warnings", "issues"]) {
+    if (!isNonNegativeInteger(summary[key])) {
+      return `summary.${key} must be a non-negative integer`;
+    }
+  }
+
+  if (!Array.isArray(result.issues)) {
+    return "issues must be an array";
+  }
+
+  let errors = 0;
+  let warnings = 0;
+  for (let index = 0; index < result.issues.length; index += 1) {
+    const issue = result.issues[index];
+    if (!issue || typeof issue !== "object" || Array.isArray(issue)) {
+      return `issues[${index}] must be an object`;
+    }
+    if (issue.severity !== "error" && issue.severity !== "warning") {
+      return `issues[${index}].severity must be error or warning`;
+    }
+    if (typeof issue.rule !== "string" || issue.rule.length === 0) {
+      return `issues[${index}].rule must be a non-empty string`;
+    }
+    if (issue.severity === "error") errors += 1;
+    else warnings += 1;
+  }
+
+  if (summary.issues !== result.issues.length) {
+    return `summary.issues (${summary.issues}) does not match issues.length (${result.issues.length})`;
+  }
+  if (summary.errors !== errors) {
+    return `summary.errors (${summary.errors}) does not match error issues (${errors})`;
+  }
+  if (summary.warnings !== warnings) {
+    return `summary.warnings (${summary.warnings}) does not match warning issues (${warnings})`;
+  }
+  if (result.pass !== (errors === 0)) {
+    return `pass (${result.pass}) is inconsistent with error count (${errors})`;
+  }
+
+  return null;
+}
+
 function formatDiagnostics(result, limit) {
   const issues = Array.isArray(result.issues) ? result.issues : [];
   const selected = issues.filter((issue) => issue.severity === "error").slice(0, limit);
@@ -186,12 +245,7 @@ export default function jpQualityGateExtension(pi) {
     const gate = await runGate(text, event.signal);
     if (gate.aborted) return;
 
-    if (gate.exitCode === 0 && gate.result?.pass === true) {
-      retries.delete(key);
-      return;
-    }
-
-    if (gate.exitCode !== 1 || !gate.result) {
+    if (gate.exitCode !== 0 && gate.exitCode !== 1) {
       retries.delete(key);
       const stderr = gate.stderr?.trim();
       const detail = gate.result?.internal_error || stderr || `exit code ${gate.exitCode}`;
@@ -199,10 +253,33 @@ export default function jpQualityGateExtension(pi) {
       return;
     }
 
+    const schemaError = validateGateResult(gate.result);
+    if (schemaError) {
+      retries.delete(key);
+      reportIntegrationError(ctx, `malformed quality gate output (${schemaError})`);
+      return;
+    }
+
+    if (gate.exitCode === 0) {
+      if (gate.result.pass !== true) {
+        retries.delete(key);
+        reportIntegrationError(ctx, "quality gate exit code 0 disagrees with pass=false");
+        return;
+      }
+      retries.delete(key);
+      return;
+    }
+
+    if (gate.result.pass !== false) {
+      retries.delete(key);
+      reportIntegrationError(ctx, "quality gate exit code 1 disagrees with pass=true");
+      return;
+    }
+
     const used = retries.get(key) ?? 0;
     if (used >= maxRetries) {
       retries.delete(key);
-      const errors = gate.result.summary?.errors ?? "?";
+      const errors = gate.result.summary.errors;
       reportIntegrationError(
         ctx,
         `still failing after ${maxRetries} correction attempt(s); ${errors} error(s) remain`,
