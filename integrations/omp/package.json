@@ -5,6 +5,6 @@
   "description": "Oh My Pi session_stop integration for jp-quality-gate",
   "homepage": "https://github.com/ktutumi/jp-quality-gate",
   "omp": {
-    "extensions": ["./index.ts"]
+    "extensions": ["./index.js"]
   }
 }
