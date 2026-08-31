@@ -1,0 +1,10 @@
+{
+  "name": "jp-quality-gate-omp-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Oh My Pi session_stop integration for jp-quality-gate",
+  "homepage": "https://github.com/ktutumi/jp-quality-gate",
+  "omp": {
+    "extensions": ["./index.ts"]
+  }
+}
