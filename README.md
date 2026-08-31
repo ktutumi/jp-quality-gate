@@ -142,6 +142,18 @@ assistant final text
 
 `examples/hook.sh` はハーネス非依存の最小例です。
 
+## Harness integrations
+
+### Oh My Pi (OMP)
+
+OMP の `session_stop` Extension を使い、品質エラーを検出した場合に
+同じターンを自動 continuation して回答を修正できます。
+
+- Setup: [`integrations/omp/README.md`](integrations/omp/README.md)
+- Extension: [`integrations/omp/index.js`](integrations/omp/index.js)
+- 既定の自動修正回数: 2回
+- CLI/integration error: fail-open
+
 ## Tests
 
 ```bash
