@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jp-quality-gate"
+version = "0.1.0"
+description = "A lightweight Japanese quality gate for LLM output using Unihan and CJClassifier"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+  "cjclassifier==1.0.5",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "ruff>=0.12",
+]
+
+[project.scripts]
+jp-quality-gate = "jp_quality_gate.cli:main"
+jpqg-build-unihan = "jp_quality_gate.build_unihan:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jp_quality_gate"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100

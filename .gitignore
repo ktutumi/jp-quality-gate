@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# 仮想環境 / 局部設定
+.venv/
+venv/
+.env
+
+# テスト・ツールキャッシュ
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# macOS / エディタ
+.DS_Store
+.idea/
+.vscode/
