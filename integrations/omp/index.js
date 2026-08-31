@@ -81,32 +81,42 @@ async function runGate(text, signal) {
   signal.addEventListener("abort", abort, { once: true });
 
   try {
-    proc.stdin.write(text);
-    proc.stdin.end();
-
-    const [stdout, stderr, exitCode] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-      proc.exited,
-    ]);
-
-    if (signal.aborted) return { aborted: true };
-
-    let result;
     try {
-      result = stdout.trim() ? JSON.parse(stdout) : undefined;
-    } catch {
-      // Invalid JSON is handled as an integration error below.
-    }
+      proc.stdin.write(text);
+      proc.stdin.end();
 
-    return {
-      aborted: false,
-      exitCode,
-      stdout,
-      stderr,
-      result,
-      command,
-    };
+      const [stdout, stderr, exitCode] = await Promise.all([
+        new Response(proc.stdout).text(),
+        new Response(proc.stderr).text(),
+        proc.exited,
+      ]);
+
+      if (signal.aborted) return { aborted: true };
+
+      let result;
+      try {
+        result = stdout.trim() ? JSON.parse(stdout) : undefined;
+      } catch {
+        // Invalid JSON is handled as an integration error by the caller.
+      }
+
+      return {
+        aborted: false,
+        exitCode,
+        stdout,
+        stderr,
+        result,
+        command,
+      };
+    } catch (error) {
+      if (signal.aborted) return { aborted: true };
+      return {
+        aborted: false,
+        exitCode: 2,
+        stderr: error instanceof Error ? error.message : String(error),
+        command,
+      };
+    }
   } finally {
     signal.removeEventListener("abort", abort);
   }
@@ -176,7 +186,7 @@ export default function jpQualityGateExtension(pi) {
     const gate = await runGate(text, event.signal);
     if (gate.aborted) return;
 
-    if (gate.exitCode === 0 && gate.result?.pass !== false) {
+    if (gate.exitCode === 0 && gate.result?.pass === true) {
       retries.delete(key);
       return;
     }
