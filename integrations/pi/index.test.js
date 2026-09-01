@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   correctionContext,
+  correctionDeliveryOptions,
   extractAssistantText,
   filterCorrectionMessages,
   isTerminalAssistantTurn,
@@ -94,6 +95,10 @@ test("correctionContext includes compact diagnostics and candidate", () => {
   assert.match(text, /simplified_chinese_form/);
   assert.match(text, /候補|candidates/);
   assert.match(text, /経/);
+});
+
+test("correction delivery uses steering so it runs before queued follow-ups", () => {
+  assert.deepEqual(correctionDeliveryOptions(), { deliverAs: "steer" });
 });
 
 test("filterCorrectionMessages hides historical diagnostics but keeps the active correction", () => {
