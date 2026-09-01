@@ -1,0 +1,14 @@
+{
+  "name": "jp-quality-gate-pi-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pi coding agent integration for jp-quality-gate",
+  "homepage": "https://github.com/ktutumi/jp-quality-gate",
+  "scripts": {
+    "test": "node --test index.test.js"
+  },
+  "pi": {
+    "extensions": ["./index.js"]
+  }
+}
