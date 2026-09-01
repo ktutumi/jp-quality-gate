@@ -4,8 +4,8 @@
 
 Pi には OMP の `session_stop` に相当する continuation hook がないため、`turn_end` で
 **ツール呼び出しを含まない assistant turn** を検査し、品質エラー時は hidden custom message を
-`followUp` としてキューへ入れます。Pi の agent loop は `turn_end` 後に follow-up queue を確認するため、
-同じ agent run の中で修正ターンが自動実行されます。
+`steer` としてキューへ入れます。Pi は turn 完了後に steering queue を follow-up queue より先に処理するため、
+ユーザーや別 Extension の follow-up が既に待機していても、日本語修正を先に実行できます。
 
 ## 動作
 
@@ -14,7 +14,7 @@ assistant final turn
   -> turn_end
   -> jp-quality-gate
      -> exit 0: accept
-     -> exit 1: hidden correction message を followUp
+     -> exit 1: hidden correction message を steer
                 -> LLM が回答全体を日本語だけ修正
                 -> 再チェック（既定で最大2回）
      -> exit 2 / malformed JSON: integration error を通知して fail-open
@@ -28,6 +28,9 @@ assistant final turn
 - テキストがない assistant message
 
 ツール実行後の最終テキスト応答は、次の tool call なし `turn_end` で検査されます。
+
+`steer` は通常は実行中のツール列を中断する用途にも使われますが、この Extension は tool call / tool result を含む turn を
+検査対象外にしているため、品質修正のために未実行ツールをスキップすることはありません。
 
 ## 前提
 
@@ -181,7 +184,7 @@ Node.js 組み込みの test runner のみを使い、npm dependency はあり�
 | | OMP | Pi |
 | --- | --- | --- |
 | Hook point | `session_stop` | `turn_end` |
-| 自動継続 | `{ continue, additionalContext }` | hidden custom `followUp` |
+| 自動継続 | `{ continue, additionalContext }` | hidden custom `steer` |
 | 診断の永続化 | continuation context | custom message として session に保存 |
 | 後続 context | OMP 側の continuation | `context` event で過去診断を除外 |
 | AbortSignal | `session_stop.signal` を利用 | `turn_end` には公開 signal がないため未使用 |
