@@ -242,6 +242,13 @@ export function correctionContext(result, attempt, maxRetries) {
   ].join("\n");
 }
 
+export function correctionDeliveryOptions() {
+  // turn_end is still inside Pi's active agent run. Steering is consumed before
+  // queued follow-ups, so the quality correction cannot be overtaken by unrelated
+  // follow-up work that was already waiting.
+  return { deliverAs: "steer" };
+}
+
 function reportIntegrationError(ctx, message) {
   console.error(`[jp-quality-gate] ${message}`);
   try {
@@ -316,10 +323,7 @@ export default function jpQualityGatePiExtension(pi) {
           summary: gate.result.summary,
         },
       },
-      {
-        deliverAs: "followUp",
-        triggerTurn: true,
-      },
+      correctionDeliveryOptions(),
     );
   });
 }
