@@ -154,6 +154,18 @@ OMP の `session_stop` Extension を使い、品質エラーを検出した場�
 - 既定の自動修正回数: 2回
 - CLI/integration error: fail-open
 
+### Pi coding agent
+
+Pi の `turn_end` と steering queue を使い、ツール呼び出しのない最終 assistant 応答を検査し、
+品質エラー時は hidden custom `steer` を同じ agent run に追加して回答を修正します。
+
+- Setup: [`integrations/pi/README.md`](integrations/pi/README.md)
+- Extension: [`integrations/pi/index.js`](integrations/pi/index.js)
+- 既定の自動修正回数: 2回
+- 品質修正は既存の queued follow-up より先に処理
+- 過去の correction message は `context` event で後続 LLM context から除外
+- CLI/integration error: fail-open
+
 ## Tests
 
 ```bash
