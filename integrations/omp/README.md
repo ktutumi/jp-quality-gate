@@ -1,10 +1,8 @@
 # OMP integration
 
-`jp-quality-gate` を Oh My Pi (OMP) の `session_stop` Extension から呼び出し、
-最終回答に日本語品質エラーがあれば同じターンを自動継続して修正させます。
+`jp-quality-gate` を Oh My Pi (OMP) の `session_stop` Extension から呼び出し、最終回答に日本語品質エラーがあれば同じターンを自動継続して修正させます。
 
-OMP の legacy Hook API ではなく、現在推奨されている Extension API の
-`session_stop` event を使います。
+OMP の legacy Hook API ではなく Extension API の `session_stop` event を使います。
 
 ## Behavior
 
@@ -20,36 +18,32 @@ assistant final response
 ```
 
 自動修正は既定で最大 **2回** です。
-OMP 本体にも連続 `session_stop` continuation の上限がありますが、
-この Extension はそれより小さい独自上限を持ちます。
 
-## 1. jp-quality-gate を PATH に入れる
+## 1. jp-quality-gate をインストール
 
-リポジトリを clone 済みなら、開発中は editable な uv tool として入れるのが便利です。
+リポジトリを clone 済みなら:
 
 ```bash
 cd /path/to/jp-quality-gate
-uv tool install --editable .
-uv tool update-shell
+make install
 ```
 
-新しい shell で確認します。
+既定のインストール先は `~/.local/bin` です。
+
+確認:
 
 ```bash
 which jp-quality-gate
 jp-quality-gate --help
 ```
 
-Unihan テーブルをまだ生成していなければ一度だけ実行します。
+Go バイナリには CJClassifier model と既定 Unihan table が埋め込まれているため、通常利用では `jpqg-build-unihan` の事前実行は不要です。
+
+PATH を変更したくない場合は、リポジトリ内で build して `JPQG_BIN` を指定できます。
 
 ```bash
-jpqg-build-unihan
-```
-
-OMP から `jp-quality-gate` が見つからない場合は、実行ファイルを明示できます。
-
-```bash
-export JPQG_BIN="$(uv tool dir --bin)/jp-quality-gate"
+make
+export JPQG_BIN=/absolute/path/to/jp-quality-gate/bin/jp-quality-gate
 ```
 
 この環境変数は `omp` を起動する shell に設定してください。
@@ -58,35 +52,28 @@ export JPQG_BIN="$(uv tool dir --bin)/jp-quality-gate"
 
 ### Recommended: config.yml
 
-`~/.omp/agent/config.yml` の `extensions` にこのディレクトリを追加します。
+`~/.omp/agent/config.yml`:
 
 ```yaml
 extensions:
   - /absolute/path/to/jp-quality-gate/integrations/omp
 ```
 
-既に `extensions:` がある場合は、その配列へ1行追加してください。
-
-OMP profile を使っている場合は、対象 profile の
-`~/.omp/profiles/<name>/agent/config.yml` に設定します。
+OMP profile を使う場合は `~/.omp/profiles/<name>/agent/config.yml` に設定します。
 
 ### One-shot test
-
-設定を変更せずに試す場合:
 
 ```bash
 omp --extension /absolute/path/to/jp-quality-gate/integrations/omp
 ```
 
-`-e` でも同じです。
+または:
 
 ```bash
 omp -e /absolute/path/to/jp-quality-gate/integrations/omp
 ```
 
 ### Alternative: user extension directory
-
-OMP の user extension directory へ symlink しても構いません。
 
 ```bash
 mkdir -p ~/.omp/agent/extensions
@@ -95,11 +82,9 @@ ln -s \
   ~/.omp/agent/extensions/jp-quality-gate
 ```
 
-この場合 `config.yml` の `extensions:` 追加は不要です。
-
 ## 3. 動作確認
 
-まず CLI 単体を確認します。
+CLI 単体:
 
 ```bash
 printf '%s' 'これは经済に関する説明です。' | jp-quality-gate --pretty
@@ -108,27 +93,20 @@ printf 'exit=%s\n' "$?"
 
 品質エラーなら exit code `1` になります。
 
-次に OMP を起動し、検証用に簡体字を含む回答を作らせます。
-例えば次のような prompt で確認できます。
+OMP でのテスト用 prompt:
 
 ```text
 次の文をそのまま1行だけ回答してください。
 これは经済に関する説明です。
 ```
 
-最初の回答に `经` が残った場合、Extension が `session_stop` で検出し、
-OMP に自動 continuation を要求します。interactive mode では次のような通知が出ます。
+最初の回答に `经` が残った場合、Extension が `session_stop` で検出して自動 continuation を要求します。interactive mode では次のような通知が出ます。
 
 ```text
 jp-quality-gate: 日本語品質エラーを検出。自動修正 1/2
 ```
 
-修正ターンには、検出 rule・位置・問題文字・日本語候補を含む diagnostics が
-`additionalContext` として渡されます。
-
 ## Configuration
-
-Extension は環境変数で調整できます。
 
 | Variable | Default | Description |
 | --- | ---: | --- |
@@ -159,18 +137,14 @@ omp
 
 ## Failure policy
 
-`jp-quality-gate` が見つからない、Unihan テーブルがない、JSON が壊れている、
-CLI が exit code 2 になった、などの **integration error は fail-open** です。
-回答を無限に止めるより、OMP の UI と stderr へエラーを通知してセッションを終了させます。
-
-品質エラーそのものは、`JPQG_MAX_RETRIES` に達するまでは自動修正します。
-上限まで修正しても失敗している場合は通知して終了します。
+CLI が見つからない、JSON が壊れている、exit code `2` などの integration error は **fail-open** です。品質エラーそのものは `JPQG_MAX_RETRIES` に達するまで自動修正します。
 
 ## Scope
 
-OMP の `session_stop` は main session の settle 前に発火します。
-そのため、この integration が直接チェックするのは **main agent の最終 assistant response** です。
-task/subagent session 自体には `session_stop` は発火しません。
+この integration が直接チェックするのは **main agent の最終 assistant response** です。サブエージェント結果が main agent の最終回答へ取り込まれれば最終回答として検査されますが、ファイルへ書き込まれた文章や tool result 自体は対象外です。
 
-サブエージェントの結果が main agent の最終回答へ取り込まれた場合は、最終回答として検査されます。
-ファイルへ書き込まれた文章や tool result を検査する機能はこの v1 integration には含めていません。
+## Test
+
+```bash
+bun test integrations/omp/index.test.js
+```
