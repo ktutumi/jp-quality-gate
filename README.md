@@ -251,7 +251,7 @@ go vet ./...
 OMP / Pi integration:
 
 ```bash
-node --test integrations/omp/index.test.js
+bun test integrations/omp/index.test.js
 node --test integrations/pi/index.test.js
 ```
 

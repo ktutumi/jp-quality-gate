@@ -146,5 +146,5 @@ CLI が見つからない、JSON が壊れている、exit code `2` などの in
 ## Test
 
 ```bash
-node --test integrations/omp/index.test.js
+bun test integrations/omp/index.test.js
 ```
