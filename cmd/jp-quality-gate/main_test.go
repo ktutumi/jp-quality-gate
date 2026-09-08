@@ -97,3 +97,51 @@ func TestReadInputUsesUniversalNewlinesForFiles(t *testing.T) {
 		t.Fatalf("input = %q", got)
 	}
 }
+
+func TestProseFlagsAndEnvironment(t *testing.T) {
+	t.Setenv("JPQG_TEXTLINT", "1")
+	t.Setenv("JPQG_NATURAL_JAPANESE", "true")
+	t.Setenv("JPQG_TEXTLINT_BIN", "/env/textlint")
+	t.Setenv("JPQG_WARNINGS_AS_ERRORS", "on")
+	options, err := parseArgs([]string{"answer.md", "--textlint-bin", "/cli/textlint", "--textlint=false", "--warnings-as-errors=false", "--natural-japanese-script", "/lint.py", "--natural-japanese-genre", "tech", "--uv-bin", "/uv"}, &bytes.Buffer{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if options.prose.Textlint || !options.prose.NaturalJapanese || options.prose.TextlintBin != "/cli/textlint" || options.warningsAsErrors || options.file != "answer.md" || options.prose.NaturalJapaneseGenre != "tech" {
+		t.Fatalf("%+v", options)
+	}
+}
+
+func TestProseCLI(t *testing.T) {
+	dir := t.TempDir()
+	bin := filepath.Join(dir, "textlint")
+	config := filepath.Join(dir, ".textlintrc.json")
+	if err := os.WriteFile(config, []byte(`{"rules":{}}`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	// The CLI's actual subprocess boundary is checked without npm or uv.
+	if err := os.WriteFile(bin, []byte("#!/bin/sh\ncat >/dev/null\nprintf '%s' '[{\"messages\":[{\"ruleId\":\"style\",\"message\":\"表現を簡潔に\",\"range\":[0,2]}]}]'\nexit 1\n"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	for _, promote := range []bool{false, true} {
+		var stdout, stderr bytes.Buffer
+		args := []string{"--textlint", "--textlint-bin", bin, "--textlint-config", config}
+		if promote {
+			args = append(args, "--warnings-as-errors")
+		}
+		code := run(args, strings.NewReader("これは日本語です。"), &stdout, &stderr)
+		wantCode, wantSeverity := 0, "warning"
+		if promote {
+			wantCode, wantSeverity = 1, "error"
+		}
+		if code != wantCode || !strings.Contains(stdout.String(), `"severity":"`+wantSeverity+`"`) || !strings.Contains(stdout.String(), "textlint:style") {
+			t.Fatalf("code=%d output=%s", code, &stdout)
+		}
+	}
+	for _, args := range [][]string{{"--textlint"}, {"--textlint", "--textlint-bin", filepath.Join(dir, "missing")}, {"--textlint", "--textlint-config", filepath.Join(dir, "missing")}, {"--natural-japanese"}} {
+		var stdout, stderr bytes.Buffer
+		if code := run(args, strings.NewReader("日本語です。"), &stdout, &stderr); code != 2 || !strings.Contains(stdout.String(), `"internal_error"`) {
+			t.Fatalf("code=%d output=%s", code, &stdout)
+		}
+	}
+}

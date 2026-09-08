@@ -4,6 +4,7 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -17,12 +18,14 @@ import (
 	"github.com/ktutumi/jp-quality-gate/internal/cj"
 	"github.com/ktutumi/jp-quality-gate/internal/embedded"
 	"github.com/ktutumi/jp-quality-gate/internal/gate"
+	"github.com/ktutumi/jp-quality-gate/internal/prose"
 	"github.com/ktutumi/jp-quality-gate/internal/unihan"
 )
 
 const defaultUnicodeVersion = "18.0.0"
 
 type cliOptions struct {
+	prose            prose.Options
 	unicodeVersion   string
 	unihanTable      string
 	unihanTableSet   bool
@@ -82,6 +85,15 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		CJMinGap:         options.cjMinGap,
 		WarningsAsErrors: options.warningsAsErrors,
 	})
+	proseIssues, err := prose.Check(context.Background(), input, options.prose, prose.ExecRunner{})
+	if err != nil {
+		writeInternalError(stdout, err)
+		return 2
+	}
+	if len(proseIssues) > 0 {
+		result.Issues = append(result.Issues, proseIssues...)
+		result.Normalize(options.warningsAsErrors)
+	}
 	encoder := json.NewEncoder(stdout)
 	encoder.SetEscapeHTML(false)
 	if options.pretty {
@@ -105,8 +117,15 @@ func parseArgs(args []string, stderr io.Writer) (cliOptions, error) {
 	flags.IntVar(&options.cjMinCJK, "cj-min-cjk", 4, "minimum CJK characters per segment")
 	flags.Float64Var(&options.cjMinGap, "cj-min-gap", 0.15, "minimum CJ score gap")
 	flags.BoolVar(&options.includeCode, "include-code", false, "include Markdown code")
-	flags.BoolVar(&options.warningsAsErrors, "warnings-as-errors", false, "promote warnings to errors")
+	flags.BoolVar(&options.warningsAsErrors, "warnings-as-errors", truthyEnv("JPQG_WARNINGS_AS_ERRORS"), "promote warnings to errors")
 	flags.BoolVar(&options.pretty, "pretty", false, "pretty-print JSON")
+	flags.BoolVar(&options.prose.Textlint, "textlint", truthyEnv("JPQG_TEXTLINT"), "enable optional textlint")
+	flags.StringVar(&options.prose.TextlintBin, "textlint-bin", os.Getenv("JPQG_TEXTLINT_BIN"), "preinstalled textlint executable")
+	flags.StringVar(&options.prose.TextlintConfig, "textlint-config", os.Getenv("JPQG_TEXTLINT_CONFIG"), "textlint config path (required when enabled)")
+	flags.BoolVar(&options.prose.NaturalJapanese, "natural-japanese", truthyEnv("JPQG_NATURAL_JAPANESE"), "enable optional natural-japanese lint.py")
+	flags.StringVar(&options.prose.NaturalJapaneseScript, "natural-japanese-script", os.Getenv("JPQG_NATURAL_JAPANESE_SCRIPT"), "natural-japanese lint.py path")
+	flags.StringVar(&options.prose.NaturalJapaneseGenre, "natural-japanese-genre", os.Getenv("JPQG_NATURAL_JAPANESE_GENRE"), "essay, tech, or business (default: common profile)")
+	flags.StringVar(&options.prose.UVBin, "uv-bin", os.Getenv("JPQG_UV_BIN"), "preinstalled uv executable")
 	flags.Usage = func() {
 		fmt.Fprintln(stderr, "usage: jp-quality-gate [options] [file]")
 		flags.PrintDefaults()
@@ -137,10 +156,15 @@ func parseArgs(args []string, stderr io.Writer) (cliOptions, error) {
 // argparse does not, so move one positional file after all recognized flags.
 func reorderArgs(args []string) ([]string, error) {
 	valueFlags := map[string]bool{
-		"unicode-version": true,
-		"unihan-table":    true,
-		"cj-min-cjk":      true,
-		"cj-min-gap":      true,
+		"unicode-version":         true,
+		"unihan-table":            true,
+		"cj-min-cjk":              true,
+		"cj-min-gap":              true,
+		"textlint-bin":            true,
+		"textlint-config":         true,
+		"natural-japanese-script": true,
+		"natural-japanese-genre":  true,
+		"uv-bin":                  true,
 	}
 	flagArgs := make([]string, 0, len(args))
 	positional := make([]string, 0, 1)
@@ -255,4 +279,13 @@ func writeInternalError(output io.Writer, err error) {
 		Pass          bool   `json:"pass"`
 		InternalError string `json:"internal_error"`
 	}{Pass: false, InternalError: err.Error()})
+}
+
+func truthyEnv(name string) bool {
+	switch strings.ToLower(os.Getenv(name)) {
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }

@@ -118,3 +118,31 @@ test("filterCorrectionMessages hides historical diagnostics but keeps the active
     ["start", [{ type: "text", text: "draft" }], "latest"],
   );
 });
+
+test("prose findings steer a correction, re-check passes, tool failure is fail-open", async () => {
+  const { proseFixture } = await import("../prose-test-helper.js");
+  const { default: extension } = await import("./index.js");
+  const fixture = proseFixture();
+  try {
+    const handlers = {};
+    const messages = [];
+    const notifications = [];
+    extension({ on: (name, fn) => { handlers[name] = fn; }, sendMessage: (...args) => messages.push(args) });
+    const ctx = { ui: { notify: (...args) => notifications.push(args) } };
+    const event = (text) => ({ message: { role: "assistant", content: text }, toolResults: [] });
+    await handlers.agent_start();
+    await handlers.turn_end(event("包括的な説明です。"), ctx);
+    assert.equal(messages.length, 1);
+    assert.deepEqual(messages[0][1], { deliverAs: "steer" });
+    assert.match(messages[0][0].content, /textlint:style/);
+    assert.match(messages[0][0].content, /natural-japanese:translationese/);
+    assert.match(messages[0][0].content, /source: textlint/);
+    assert.match(messages[0][0].content, /数値は変更しない/);
+    await handlers.turn_end(event("使い方を説明します。"), ctx);
+    assert.equal(messages.length, 1);
+    process.env.JPQG_TEXTLINT_BIN = "/missing-jpqg-textlint";
+    await handlers.turn_end(event("包括的な説明です。"), ctx);
+    assert.equal(messages.length, 1);
+    assert.equal(notifications.at(-1)[1], "error");
+  } finally { fixture.cleanup(); }
+});

@@ -200,8 +200,9 @@ function formatDiagnostics(result, limit) {
       const candidates = Array.isArray(details.japanese_candidates)
         ? ` -> candidates: ${details.japanese_candidates.join(", ")}`
         : "";
+      const source = details.source ? ` [source: ${details.source}]` : "";
       const message = issue.message ? ` — ${issue.message}` : "";
-      return `${index + 1}. ${issue.rule ?? "quality_error"}${pos}${text}${candidates}${message}`;
+      return `${index + 1}. ${issue.rule ?? "quality_error"}${pos}${text}${candidates}${source}${message}`;
     })
     .join("\n");
 }

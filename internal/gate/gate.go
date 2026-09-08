@@ -2,8 +2,6 @@
 package gate
 
 import (
-	"sort"
-
 	"github.com/ktutumi/jp-quality-gate/internal/cj"
 	"github.com/ktutumi/jp-quality-gate/internal/report"
 	jptext "github.com/ktutumi/jp-quality-gate/internal/text"
@@ -30,21 +28,7 @@ func (g *Gate) Check(input string, options Options) report.GateResult {
 	issues := g.Unihan.Scan(input, masked)
 	issues = append(issues, g.CJ.Scan(input, masked, options.CJMinCJK, options.CJMinGap)...)
 
-	if options.WarningsAsErrors {
-		for index := range issues {
-			if issues[index].Severity == report.SeverityWarning {
-				issues[index].Severity = report.SeverityError
-			}
-		}
-	}
-	sort.SliceStable(issues, func(i, j int) bool {
-		if issues[i].Start != issues[j].Start {
-			return issues[i].Start < issues[j].Start
-		}
-		return issues[i].Severity == report.SeverityError && issues[j].Severity != report.SeverityError
-	})
-
-	return report.GateResult{
+	result := report.GateResult{
 		Issues: issues,
 		Meta: map[string]any{
 			"unicode_version":      g.Unihan.UnicodeVersion,
@@ -54,4 +38,6 @@ func (g *Gate) Check(input string, options Options) report.GateResult {
 			"include_code":         options.IncludeCode,
 		},
 	}
+	result.Normalize(options.WarningsAsErrors)
+	return result
 }

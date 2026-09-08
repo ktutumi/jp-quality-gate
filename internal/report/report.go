@@ -4,6 +4,7 @@ package report
 import (
 	"bytes"
 	"encoding/json"
+	"sort"
 )
 
 // Severity is the severity assigned to a finding.
@@ -168,4 +169,21 @@ func (r GateResult) ToMap() map[string]any {
 		"issues": issues,
 		"meta":   meta,
 	}
+}
+
+// Normalize promotes warnings when requested and preserves source order.
+func (r *GateResult) Normalize(warningsAsErrors bool) {
+	if warningsAsErrors {
+		for index := range r.Issues {
+			if r.Issues[index].Severity == SeverityWarning {
+				r.Issues[index].Severity = SeverityError
+			}
+		}
+	}
+	sort.SliceStable(r.Issues, func(i, j int) bool {
+		if r.Issues[i].Start != r.Issues[j].Start {
+			return r.Issues[i].Start < r.Issues[j].Start
+		}
+		return r.Issues[i].Severity == SeverityError && r.Issues[j].Severity != SeverityError
+	})
 }
