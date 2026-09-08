@@ -38,6 +38,7 @@ func (ExecRunner) Run(ctx context.Context, bin string, args []string, input stri
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, bin, args...)
+	configureCancellation(cmd)
 	cmd.WaitDelay = time.Second
 	cmd.Stdin = strings.NewReader(input)
 	var stdout, stderr bytes.Buffer
