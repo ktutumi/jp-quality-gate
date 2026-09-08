@@ -2,6 +2,7 @@
 /bin/
 
 # Local environment
+/tools/textlint/node_modules/
 .env
 
 # macOS / editors
