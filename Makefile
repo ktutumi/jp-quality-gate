@@ -1,4 +1,4 @@
-GOBIN ?= $(HOME)/.local/bin
+GOBIN = $(HOME)/.local/bin
 
 .PHONY: build install test vet test-integrations check clean
 
