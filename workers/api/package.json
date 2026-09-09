@@ -1,0 +1,15 @@
+{
+  "name": "jp-quality-gate-validation-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "miniflare": "5.20260908.0-alpha",
+    "typescript": "7.0.2",
+    "wrangler": "4.130.0"
+  }
+}

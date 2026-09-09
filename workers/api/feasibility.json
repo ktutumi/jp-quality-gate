@@ -1,0 +1,354 @@
+{
+  "scope": "local Miniflare/workerd only; not deployed Cloudflare measurements",
+  "toolchain": {
+    "go": "1.27.1",
+    "wrangler": "4.130.0",
+    "miniflare": "5.20260908.0-alpha",
+    "typescript": "7.0.2",
+    "node": "26.8.1"
+  },
+  "bundle_total_upload_kib": 13076.41,
+  "unprofiled_cold": {
+    "status": 200,
+    "elapsed_ms": 1089.4784580159467,
+    "input_utf8_bytes": 42,
+    "summary": {
+      "errors": 1,
+      "warnings": 0,
+      "issues": 1
+    },
+    "wasm_linear_memory_bytes": 90701824
+  },
+  "unprofiled_warm": [
+    {
+      "input_utf8_bytes": 1024,
+      "status": 200,
+      "elapsed_ms": 4.662457999074832,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "issues": 0
+      },
+      "wasm_linear_memory_bytes": 90701824
+    },
+    {
+      "input_utf8_bytes": 10240,
+      "status": 200,
+      "elapsed_ms": 5.389333004131913,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "issues": 0
+      },
+      "wasm_linear_memory_bytes": 90701824
+    },
+    {
+      "input_utf8_bytes": 102400,
+      "status": 200,
+      "elapsed_ms": 21.20404099696316,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "issues": 0
+      },
+      "wasm_linear_memory_bytes": 90701824
+    },
+    {
+      "input_utf8_bytes": 262144,
+      "status": 200,
+      "elapsed_ms": 37.337582994950935,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "issues": 0
+      },
+      "wasm_linear_memory_bytes": 90701824
+    }
+  ],
+  "boundaries": {
+    "empty": {
+      "status": 200,
+      "elapsed_ms": 1.1663330078590661,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "issues": 0
+      }
+    },
+    "over_limit": {
+      "status": 413,
+      "elapsed_ms": 1.7928750021383166,
+      "summary": null
+    }
+  },
+  "profiled_requests": [
+    {
+      "label": "cold-1KiB",
+      "concurrency": 1,
+      "input_utf8_bytes": [
+        1024
+      ],
+      "statuses": [
+        200
+      ],
+      "elapsed_ms": 1090.519583,
+      "local_profile_nonidle_sample_ms": 1086.905,
+      "profile_interval_ms": 1092.342,
+      "heap_before": {
+        "usedSize": 1594596,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 737884
+      },
+      "heap_after": {
+        "usedSize": 1630804,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 737884
+      },
+      "wasm_linear_memory_bytes": [
+        101711872
+      ],
+      "summaries": [
+        {
+          "errors": 0,
+          "warnings": 0,
+          "issues": 0
+        }
+      ],
+      "first_issue_positions": [
+        null
+      ]
+    },
+    {
+      "label": "warm-1024",
+      "concurrency": 1,
+      "input_utf8_bytes": [
+        1024
+      ],
+      "statuses": [
+        200
+      ],
+      "elapsed_ms": 3.5042919999998503,
+      "local_profile_nonidle_sample_ms": 0,
+      "profile_interval_ms": 5.373,
+      "heap_before": {
+        "usedSize": 1630804,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 737884
+      },
+      "heap_after": {
+        "usedSize": 1644336,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 749309
+      },
+      "wasm_linear_memory_bytes": [
+        101711872
+      ],
+      "summaries": [
+        {
+          "errors": 0,
+          "warnings": 0,
+          "issues": 0
+        }
+      ],
+      "first_issue_positions": [
+        null
+      ]
+    },
+    {
+      "label": "warm-10240",
+      "concurrency": 1,
+      "input_utf8_bytes": [
+        10240
+      ],
+      "statuses": [
+        200
+      ],
+      "elapsed_ms": 4.9335839999998825,
+      "local_profile_nonidle_sample_ms": 4.121,
+      "profile_interval_ms": 6.708,
+      "heap_before": {
+        "usedSize": 1644336,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 749309
+      },
+      "heap_after": {
+        "usedSize": 1692864,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 797004
+      },
+      "wasm_linear_memory_bytes": [
+        101711872
+      ],
+      "summaries": [
+        {
+          "errors": 0,
+          "warnings": 0,
+          "issues": 0
+        }
+      ],
+      "first_issue_positions": [
+        null
+      ]
+    },
+    {
+      "label": "warm-102400",
+      "concurrency": 1,
+      "input_utf8_bytes": [
+        102400
+      ],
+      "statuses": [
+        200
+      ],
+      "elapsed_ms": 17.704334000000017,
+      "local_profile_nonidle_sample_ms": 16.623,
+      "profile_interval_ms": 19.537,
+      "heap_before": {
+        "usedSize": 1692864,
+        "totalSize": 2883584,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 797004
+      },
+      "heap_after": {
+        "usedSize": 1757308,
+        "totalSize": 4194304,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 737884
+      },
+      "wasm_linear_memory_bytes": [
+        101711872
+      ],
+      "summaries": [
+        {
+          "errors": 0,
+          "warnings": 0,
+          "issues": 0
+        }
+      ],
+      "first_issue_positions": [
+        null
+      ]
+    },
+    {
+      "label": "warm-262144",
+      "concurrency": 1,
+      "input_utf8_bytes": [
+        262144
+      ],
+      "statuses": [
+        200
+      ],
+      "elapsed_ms": 36.33720900000003,
+      "local_profile_nonidle_sample_ms": 35.598,
+      "profile_interval_ms": 38.23,
+      "heap_before": {
+        "usedSize": 1757308,
+        "totalSize": 4194304,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 737884
+      },
+      "heap_after": {
+        "usedSize": 2628128,
+        "totalSize": 4980736,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 1811055
+      },
+      "wasm_linear_memory_bytes": [
+        101711872
+      ],
+      "summaries": [
+        {
+          "errors": 0,
+          "warnings": 0,
+          "issues": 0
+        }
+      ],
+      "first_issue_positions": [
+        null
+      ]
+    },
+    {
+      "label": "concurrent-4x256KiB",
+      "concurrency": 4,
+      "input_utf8_bytes": [
+        262144,
+        262144,
+        262144,
+        262144
+      ],
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "elapsed_ms": 155.63133300000004,
+      "local_profile_nonidle_sample_ms": 153.976,
+      "profile_interval_ms": 157.596,
+      "heap_before": {
+        "usedSize": 2628128,
+        "totalSize": 4980736,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 1811055
+      },
+      "heap_after": {
+        "usedSize": 4214744,
+        "totalSize": 6881280,
+        "embedderHeapUsedSize": 386904,
+        "backingStorageSize": 2609794
+      },
+      "wasm_linear_memory_bytes": [
+        104595456,
+        101711872,
+        101711872,
+        104595456
+      ],
+      "summaries": [
+        {
+          "errors": 1,
+          "warnings": 0,
+          "issues": 1
+        },
+        {
+          "errors": 1,
+          "warnings": 0,
+          "issues": 1
+        },
+        {
+          "errors": 1,
+          "warnings": 0,
+          "issues": 1
+        },
+        {
+          "errors": 1,
+          "warnings": 0,
+          "issues": 1
+        }
+      ],
+      "first_issue_positions": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "deployed_measurements": {
+    "status": "unavailable",
+    "reason": "Default OAuth expired; separately configured credential is active but the configured account Workers API returns HTTP 403 Authentication error."
+  },
+  "decision": "insufficient-evidence-stop",
+  "local_startup_profiling": {
+    "status": "unavailable",
+    "attempts": [
+      "wrangler check startup --config wrangler.validation.jsonc: static-files-directory detection error",
+      "wrangler check startup --args \"--config wrangler.validation.jsonc\": CLI argument parsing error"
+    ],
+    "note": "Neither attempt produced startup_time_ms. Deployed startup still requires authenticated upload."
+  }
+}
