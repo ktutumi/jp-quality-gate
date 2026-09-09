@@ -395,5 +395,13 @@ testWithTimeout("keeps distinct concurrent requests isolated during cold initial
       assertJSONResponse(actual[index]);
       assert.deepEqual(coreResult(actual[index].json), coreResult(expected[index]), `${requests[index].name}: concurrent mismatch`);
     }
+    const metas = actual.map(({ json }) => json.meta);
+    assert.equal(new Set(metas.map((meta) => meta.validation_isolate_id)).size, 1);
+    assert.equal(metas.filter((meta) => meta.validation_initialization === "cold").length, 1);
+    assert.deepEqual(metas.map((meta) => meta.validation_request_sequence).sort(), [1, 2, 3, 4]);
+    const reused = await postJSON(freshURL, { text: "再利用の確認です。" });
+    assert.equal(reused.json.meta.validation_isolate_id, metas[0].validation_isolate_id);
+    assert.equal(reused.json.meta.validation_initialization, "warm");
+    assert.equal(reused.json.meta.validation_request_sequence, 5);
   });
 });

@@ -5,6 +5,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
+    "measure": "node scripts/measure.mjs",
     "test": "node --test test/*.test.mjs"
   },
   "devDependencies": {

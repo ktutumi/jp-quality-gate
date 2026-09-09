@@ -1,5 +1,5 @@
 {
-  "scope": "local Miniflare/workerd only; not deployed Cloudflare measurements",
+  "scope": "local Miniflare/workerd measurements plus deployed HTTP and live invocation CPU evidence; local profiles remain local-only",
   "toolchain": {
     "go": "1.27.1",
     "wrangler": "4.130.0",
@@ -339,8 +339,1276 @@
     }
   ],
   "deployed_measurements": {
-    "status": "unavailable",
-    "reason": "Default OAuth expired; separately configured credential is active but the configured account Workers API returns HTTP 403 Authentication error."
+    "status": "http-and-live-cpu-observed",
+    "endpoint": "https://jp-quality-gate-validation.ktutumi.workers.dev/v1/check",
+    "deployment": {
+      "status": "succeeded",
+      "source": "user report"
+    },
+    "http": {
+      "schema": "deployed-http-v1",
+      "endpoint": "https://jp-quality-gate-validation.ktutumi.workers.dev/v1/check",
+      "generated_at": "2026-09-09T14:21:27.063Z",
+      "request_policy": {
+        "method": "POST",
+        "content_type": "application/json",
+        "redirect": "manual; no redirects followed, so a token cannot be sent to another origin",
+        "authorization": "Bearer value supplied from JPQG_API_TOKEN; credential omitted from evidence",
+        "elapsed_definition": "client_elapsed_ms is wall-clock fetch plus response-body elapsed, not CPU time"
+      },
+      "native_cli": {
+        "build": "go build -o <temporary-directory>/jp-quality-gate ./cmd/jp-quality-gate",
+        "temporary_location": true,
+        "environment": "copied environment with every JPQG_* key, GOOS, and GOARCH removed",
+        "credential_output": "none",
+        "build_exit_code": 0,
+        "build_signal": null,
+        "build_timed_out": false
+      },
+      "interpretation": {
+        "no_cold_warm_claim": true,
+        "no_same_isolate_claim": true,
+        "wasm_capacity_field": "response meta.validation_wasm_memory_bytes; omitted from parity comparison",
+        "parity_basis": "deep comparison of pass, summary, and complete ordered issues (including message fields), with meta omitted"
+      },
+      "cases": {
+        "parity": [
+          {
+            "name": "valid-normal-japanese",
+            "input_utf8_bytes": 42,
+            "options": {},
+            "native_cli_exit_code": 0,
+            "status": 200,
+            "client_elapsed_ms": 5189.43,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "issues": 0
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": true,
+              "actual_pass": true,
+              "expected_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "actual_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "expected_issue_count": 0,
+              "actual_issue_count": 0,
+              "expected_issue_messages": [],
+              "actual_issue_messages": [],
+              "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+              "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+            }
+          },
+          {
+            "name": "quality-fail-simplified-chinese",
+            "input_utf8_bytes": 45,
+            "options": {},
+            "native_cli_exit_code": 1,
+            "status": 200,
+            "client_elapsed_ms": 154.183,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": {
+              "errors": 2,
+              "warnings": 1,
+              "issues": 3
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": false,
+              "actual_pass": false,
+              "expected_summary": {
+                "errors": 2,
+                "warnings": 1,
+                "issues": 3
+              },
+              "actual_summary": {
+                "errors": 2,
+                "warnings": 1,
+                "issues": 3
+              },
+              "expected_issue_count": 3,
+              "actual_issue_count": 3,
+              "expected_issue_messages": [
+                "Segment classified as zh-hans (gap=0.101)",
+                "Segment classified as zh-hans (gap=0.174)",
+                "Japanese-unattested simplified Chinese form detected: 们"
+              ],
+              "actual_issue_messages": [
+                "Segment classified as zh-hans (gap=0.101)",
+                "Segment classified as zh-hans (gap=0.174)",
+                "Japanese-unattested simplified Chinese form detected: 们"
+              ],
+              "expected_complete_issues_sha256": "1b2e1055637f9bb78f92db21a29aa3857b973b5f5cc6497ac431d7a6f4bd67b9",
+              "actual_complete_issues_sha256": "1b2e1055637f9bb78f92db21a29aa3857b973b5f5cc6497ac431d7a6f4bd67b9",
+              "expected_core_sha256": "9741dcb639a2dc8c70b93c13d31e72b14da0eb2aff8f1e77d4b77f4190f0c222",
+              "actual_core_sha256": "9741dcb639a2dc8c70b93c13d31e72b14da0eb2aff8f1e77d4b77f4190f0c222"
+            }
+          },
+          {
+            "name": "unicode-astral",
+            "input_utf8_bytes": 32,
+            "options": {},
+            "native_cli_exit_code": 1,
+            "status": 200,
+            "client_elapsed_ms": 147.407,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": {
+              "errors": 1,
+              "warnings": 0,
+              "issues": 1
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": false,
+              "actual_pass": false,
+              "expected_summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              },
+              "actual_summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              },
+              "expected_issue_count": 1,
+              "actual_issue_count": 1,
+              "expected_issue_messages": [
+                "Japanese-unattested simplified Chinese form detected: 经"
+              ],
+              "actual_issue_messages": [
+                "Japanese-unattested simplified Chinese form detected: 经"
+              ],
+              "expected_complete_issues_sha256": "1966d0870e99ced84834dfbef15e198ac721b4639400809eb45d9047acfa1c38",
+              "actual_complete_issues_sha256": "1966d0870e99ced84834dfbef15e198ac721b4639400809eb45d9047acfa1c38",
+              "expected_core_sha256": "de94075b94a67d1117ec8ab4c96c620915be612457a3a6d20dab3115260732ad",
+              "actual_core_sha256": "de94075b94a67d1117ec8ab4c96c620915be612457a3a6d20dab3115260732ad"
+            }
+          },
+          {
+            "name": "markdown-url-and-code-masked",
+            "input_utf8_bytes": 134,
+            "options": {},
+            "native_cli_exit_code": 0,
+            "status": 200,
+            "client_elapsed_ms": 151.711,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "issues": 0
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": true,
+              "actual_pass": true,
+              "expected_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "actual_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "expected_issue_count": 0,
+              "actual_issue_count": 0,
+              "expected_issue_messages": [],
+              "actual_issue_messages": [],
+              "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+              "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+            }
+          },
+          {
+            "name": "markdown-code-included",
+            "input_utf8_bytes": 43,
+            "options": {
+              "include_code": true
+            },
+            "native_cli_exit_code": 1,
+            "status": 200,
+            "client_elapsed_ms": 156.731,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": {
+              "errors": 1,
+              "warnings": 0,
+              "issues": 1
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": false,
+              "actual_pass": false,
+              "expected_summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              },
+              "actual_summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              },
+              "expected_issue_count": 1,
+              "actual_issue_count": 1,
+              "expected_issue_messages": [
+                "Japanese-unattested simplified Chinese form detected: 经"
+              ],
+              "actual_issue_messages": [
+                "Japanese-unattested simplified Chinese form detected: 经"
+              ],
+              "expected_complete_issues_sha256": "928348fd18cddbe81e0139bf7739e70ebd7fd9c06852abf7be84a0571172e577",
+              "actual_complete_issues_sha256": "928348fd18cddbe81e0139bf7739e70ebd7fd9c06852abf7be84a0571172e577",
+              "expected_core_sha256": "1b5e476b2117eea1d73780fa5302d5d0bacbd7ac8fbeb9ee4e5c922e70a61b88",
+              "actual_core_sha256": "1b5e476b2117eea1d73780fa5302d5d0bacbd7ac8fbeb9ee4e5c922e70a61b88"
+            }
+          },
+          {
+            "name": "warnings-retained",
+            "input_utf8_bytes": 45,
+            "options": {
+              "cj_min_cjk": 4,
+              "cj_min_gap": 0.999
+            },
+            "native_cli_exit_code": 1,
+            "status": 200,
+            "client_elapsed_ms": 161.516,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": {
+              "errors": 1,
+              "warnings": 2,
+              "issues": 3
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": false,
+              "actual_pass": false,
+              "expected_summary": {
+                "errors": 1,
+                "warnings": 2,
+                "issues": 3
+              },
+              "actual_summary": {
+                "errors": 1,
+                "warnings": 2,
+                "issues": 3
+              },
+              "expected_issue_count": 3,
+              "actual_issue_count": 3,
+              "expected_issue_messages": [
+                "Segment classified as zh-hans (gap=0.101)",
+                "Segment classified as zh-hans (gap=0.174)",
+                "Japanese-unattested simplified Chinese form detected: 们"
+              ],
+              "actual_issue_messages": [
+                "Segment classified as zh-hans (gap=0.101)",
+                "Segment classified as zh-hans (gap=0.174)",
+                "Japanese-unattested simplified Chinese form detected: 们"
+              ],
+              "expected_complete_issues_sha256": "a63ba7d57d08ce09294aa8522af77bb4aeaf536f88a82810415dea4f9a66c33b",
+              "actual_complete_issues_sha256": "a63ba7d57d08ce09294aa8522af77bb4aeaf536f88a82810415dea4f9a66c33b",
+              "expected_core_sha256": "3ec1d42b31c81368b99059dc266578ab08ab1acbdba106f1e2ab07b80bd786cb",
+              "actual_core_sha256": "3ec1d42b31c81368b99059dc266578ab08ab1acbdba106f1e2ab07b80bd786cb"
+            }
+          },
+          {
+            "name": "warnings-promoted",
+            "input_utf8_bytes": 45,
+            "options": {
+              "cj_min_cjk": 4,
+              "cj_min_gap": 0.999,
+              "warnings_as_errors": true
+            },
+            "native_cli_exit_code": 1,
+            "status": 200,
+            "client_elapsed_ms": 162.101,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": {
+              "errors": 3,
+              "warnings": 0,
+              "issues": 3
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": false,
+              "actual_pass": false,
+              "expected_summary": {
+                "errors": 3,
+                "warnings": 0,
+                "issues": 3
+              },
+              "actual_summary": {
+                "errors": 3,
+                "warnings": 0,
+                "issues": 3
+              },
+              "expected_issue_count": 3,
+              "actual_issue_count": 3,
+              "expected_issue_messages": [
+                "Segment classified as zh-hans (gap=0.101)",
+                "Segment classified as zh-hans (gap=0.174)",
+                "Japanese-unattested simplified Chinese form detected: 们"
+              ],
+              "actual_issue_messages": [
+                "Segment classified as zh-hans (gap=0.101)",
+                "Segment classified as zh-hans (gap=0.174)",
+                "Japanese-unattested simplified Chinese form detected: 们"
+              ],
+              "expected_complete_issues_sha256": "9d53ecc1ba9e1950ce4777d5c273e40bd133e3306ffcb09b9ebcb36acf44a116",
+              "actual_complete_issues_sha256": "9d53ecc1ba9e1950ce4777d5c273e40bd133e3306ffcb09b9ebcb36acf44a116",
+              "expected_core_sha256": "c2a619b4d471b506cf07ee1fe7bac5f076ff06198403b4d8dc1d4e961e6df9e8",
+              "actual_core_sha256": "c2a619b4d471b506cf07ee1fe7bac5f076ff06198403b4d8dc1d4e961e6df9e8"
+            }
+          }
+        ],
+        "authorization": [
+          {
+            "name": "missing-authorization",
+            "expected_status": 401,
+            "request_body_bytes": 20,
+            "status": 401,
+            "client_elapsed_ms": 151.754,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "unauthorized",
+            "expected_status_match": true
+          },
+          {
+            "name": "wrong-bearer",
+            "expected_status": 401,
+            "request_body_bytes": 20,
+            "status": 401,
+            "client_elapsed_ms": 146.809,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "unauthorized",
+            "expected_status_match": true
+          },
+          {
+            "name": "wrong-auth-scheme",
+            "expected_status": 401,
+            "request_body_bytes": 20,
+            "status": 401,
+            "client_elapsed_ms": 145.055,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "unauthorized",
+            "expected_status_match": true
+          }
+        ],
+        "invalid_requests": [
+          {
+            "name": "malformed-json",
+            "expected_status": 400,
+            "request_body_bytes": 8,
+            "status": 400,
+            "client_elapsed_ms": 144.971,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "invalid-utf8",
+            "expected_status": 400,
+            "request_body_bytes": 10,
+            "status": 400,
+            "client_elapsed_ms": 145.355,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "missing-text",
+            "expected_status": 400,
+            "request_body_bytes": 2,
+            "status": 400,
+            "client_elapsed_ms": 142.046,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "non-string-text",
+            "expected_status": 400,
+            "request_body_bytes": 10,
+            "status": 400,
+            "client_elapsed_ms": 147.203,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "null-options",
+            "expected_status": 400,
+            "request_body_bytes": 35,
+            "status": 400,
+            "client_elapsed_ms": 146.157,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "unknown-top-level-field",
+            "expected_status": 400,
+            "request_body_bytes": 55,
+            "status": 400,
+            "client_elapsed_ms": 144.852,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "unknown-option",
+            "expected_status": 400,
+            "request_body_bytes": 50,
+            "status": 400,
+            "client_elapsed_ms": 143.951,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "zero-minimum-cjk",
+            "expected_status": 400,
+            "request_body_bytes": 47,
+            "status": 400,
+            "client_elapsed_ms": 142.954,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "out-of-range-gap",
+            "expected_status": 400,
+            "request_body_bytes": 50,
+            "status": 400,
+            "client_elapsed_ms": 155.272,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "wrong-include-code-type",
+            "expected_status": 400,
+            "request_body_bytes": 55,
+            "status": 400,
+            "client_elapsed_ms": 165.293,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          },
+          {
+            "name": "wrong-content-type",
+            "expected_status": 400,
+            "request_body_bytes": 20,
+            "status": 400,
+            "client_elapsed_ms": 143.382,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "invalid request",
+            "expected_status_match": true
+          }
+        ],
+        "boundaries": [
+          {
+            "name": "empty-text",
+            "input_utf8_bytes": 0,
+            "options": {},
+            "native_cli_exit_code": 0,
+            "status": 200,
+            "client_elapsed_ms": 174.206,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "issues": 0
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": true,
+              "actual_pass": true,
+              "expected_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "actual_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "expected_issue_count": 0,
+              "actual_issue_count": 0,
+              "expected_issue_messages": [],
+              "actual_issue_messages": [],
+              "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+              "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+            }
+          },
+          {
+            "name": "exactly-256KiB",
+            "input_utf8_bytes": 262144,
+            "options": {},
+            "native_cli_exit_code": 0,
+            "status": 200,
+            "client_elapsed_ms": 815.87,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "issues": 0
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": true,
+              "actual_pass": true,
+              "expected_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "actual_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "expected_issue_count": 0,
+              "actual_issue_count": 0,
+              "expected_issue_messages": [],
+              "actual_issue_messages": [],
+              "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+              "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+            },
+            "expected_text_utf8_bytes": 262144
+          },
+          {
+            "name": "decoded-overflow-256KiB-plus-one",
+            "expected_status": 413,
+            "request_body_bytes": 268252,
+            "status": 413,
+            "client_elapsed_ms": 444.322,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "request too large",
+            "expected_status_match": true
+          },
+          {
+            "name": "escaped-worst-case-256KiB-text",
+            "input_utf8_bytes": 262144,
+            "options": {},
+            "native_cli_exit_code": 0,
+            "status": 200,
+            "client_elapsed_ms": 1192.996,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "issues": 0
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": true,
+              "actual_pass": true,
+              "expected_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "actual_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "expected_issue_count": 0,
+              "actual_issue_count": 0,
+              "expected_issue_messages": [],
+              "actual_issue_messages": [],
+              "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+              "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+            },
+            "request_body_bytes": 1572875,
+            "encoding": "each ASCII character represented as \\uXXXX in JSON"
+          },
+          {
+            "name": "raw-cap-streamed-request",
+            "expected_status": 413,
+            "request_body_bytes": 1638411,
+            "status": 413,
+            "client_elapsed_ms": 1527.867,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": false,
+            "summary": null,
+            "wasm_linear_memory_bytes": null,
+            "error": "request too large",
+            "expected_status_match": true,
+            "stream_chunks": {
+              "prefix_bytes": 11,
+              "chunk_bytes": 65536,
+              "count": 25
+            }
+          }
+        ],
+        "sequential": [
+          {
+            "name": "sequential-1KiB",
+            "input_utf8_bytes": 1024,
+            "options": {},
+            "native_cli_exit_code": 0,
+            "status": 200,
+            "client_elapsed_ms": 144.527,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "issues": 0
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": true,
+              "actual_pass": true,
+              "expected_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "actual_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "expected_issue_count": 0,
+              "actual_issue_count": 0,
+              "expected_issue_messages": [],
+              "actual_issue_messages": [],
+              "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+              "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+            },
+            "sequence_order": 1
+          },
+          {
+            "name": "sequential-10KiB",
+            "input_utf8_bytes": 10240,
+            "options": {},
+            "native_cli_exit_code": 0,
+            "status": 200,
+            "client_elapsed_ms": 149.956,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "issues": 0
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": true,
+              "actual_pass": true,
+              "expected_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "actual_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "expected_issue_count": 0,
+              "actual_issue_count": 0,
+              "expected_issue_messages": [],
+              "actual_issue_messages": [],
+              "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+              "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+            },
+            "sequence_order": 2
+          },
+          {
+            "name": "sequential-100KiB",
+            "input_utf8_bytes": 102400,
+            "options": {},
+            "native_cli_exit_code": 0,
+            "status": 200,
+            "client_elapsed_ms": 328.475,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "issues": 0
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": true,
+              "actual_pass": true,
+              "expected_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "actual_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "expected_issue_count": 0,
+              "actual_issue_count": 0,
+              "expected_issue_messages": [],
+              "actual_issue_messages": [],
+              "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+              "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+            },
+            "sequence_order": 3
+          },
+          {
+            "name": "sequential-256KiB",
+            "input_utf8_bytes": 262144,
+            "options": {},
+            "native_cli_exit_code": 0,
+            "status": 200,
+            "client_elapsed_ms": 508.594,
+            "content_type": "application/json; charset=utf-8",
+            "redirected": false,
+            "response_url_is_endpoint": true,
+            "pass": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "issues": 0
+            },
+            "wasm_linear_memory_bytes": 94896128,
+            "error": null,
+            "comparison": {
+              "core_equal": true,
+              "pass_equal": true,
+              "summary_equal": true,
+              "issues_equal": true,
+              "expected_pass": true,
+              "actual_pass": true,
+              "expected_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "actual_summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "expected_issue_count": 0,
+              "actual_issue_count": 0,
+              "expected_issue_messages": [],
+              "actual_issue_messages": [],
+              "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+              "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+            },
+            "sequence_order": 4
+          }
+        ],
+        "concurrent": {
+          "concurrency": 4,
+          "batch_cli_and_http_elapsed_ms": 6142.559,
+          "distinct_inputs": true,
+          "input_utf8_bytes": [
+            262144,
+            262144,
+            262144,
+            262144
+          ],
+          "requests": [
+            {
+              "name": "concurrent-A-256KiB",
+              "input_utf8_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 591.716,
+              "content_type": "application/json; charset=utf-8",
+              "redirected": false,
+              "response_url_is_endpoint": true,
+              "pass": true,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "wasm_linear_memory_bytes": 94896128,
+              "native_cli_exit_code": 0,
+              "comparison": {
+                "core_equal": true,
+                "pass_equal": true,
+                "summary_equal": true,
+                "issues_equal": true,
+                "expected_pass": true,
+                "actual_pass": true,
+                "expected_summary": {
+                  "errors": 0,
+                  "warnings": 0,
+                  "issues": 0
+                },
+                "actual_summary": {
+                  "errors": 0,
+                  "warnings": 0,
+                  "issues": 0
+                },
+                "expected_issue_count": 0,
+                "actual_issue_count": 0,
+                "expected_issue_messages": [],
+                "actual_issue_messages": [],
+                "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+                "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+              }
+            },
+            {
+              "name": "concurrent-B-256KiB",
+              "input_utf8_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 818.362,
+              "content_type": "application/json; charset=utf-8",
+              "redirected": false,
+              "response_url_is_endpoint": true,
+              "pass": true,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "wasm_linear_memory_bytes": 94896128,
+              "native_cli_exit_code": 0,
+              "comparison": {
+                "core_equal": true,
+                "pass_equal": true,
+                "summary_equal": true,
+                "issues_equal": true,
+                "expected_pass": true,
+                "actual_pass": true,
+                "expected_summary": {
+                  "errors": 0,
+                  "warnings": 0,
+                  "issues": 0
+                },
+                "actual_summary": {
+                  "errors": 0,
+                  "warnings": 0,
+                  "issues": 0
+                },
+                "expected_issue_count": 0,
+                "actual_issue_count": 0,
+                "expected_issue_messages": [],
+                "actual_issue_messages": [],
+                "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+                "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+              }
+            },
+            {
+              "name": "concurrent-C-256KiB",
+              "input_utf8_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 698.762,
+              "content_type": "application/json; charset=utf-8",
+              "redirected": false,
+              "response_url_is_endpoint": true,
+              "pass": true,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "wasm_linear_memory_bytes": 94896128,
+              "native_cli_exit_code": 0,
+              "comparison": {
+                "core_equal": true,
+                "pass_equal": true,
+                "summary_equal": true,
+                "issues_equal": true,
+                "expected_pass": true,
+                "actual_pass": true,
+                "expected_summary": {
+                  "errors": 0,
+                  "warnings": 0,
+                  "issues": 0
+                },
+                "actual_summary": {
+                  "errors": 0,
+                  "warnings": 0,
+                  "issues": 0
+                },
+                "expected_issue_count": 0,
+                "actual_issue_count": 0,
+                "expected_issue_messages": [],
+                "actual_issue_messages": [],
+                "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+                "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+              }
+            },
+            {
+              "name": "concurrent-D-256KiB",
+              "input_utf8_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 5819.33,
+              "content_type": "application/json; charset=utf-8",
+              "redirected": false,
+              "response_url_is_endpoint": true,
+              "pass": true,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              },
+              "wasm_linear_memory_bytes": 94896128,
+              "native_cli_exit_code": 0,
+              "comparison": {
+                "core_equal": true,
+                "pass_equal": true,
+                "summary_equal": true,
+                "issues_equal": true,
+                "expected_pass": true,
+                "actual_pass": true,
+                "expected_summary": {
+                  "errors": 0,
+                  "warnings": 0,
+                  "issues": 0
+                },
+                "actual_summary": {
+                  "errors": 0,
+                  "warnings": 0,
+                  "issues": 0
+                },
+                "expected_issue_count": 0,
+                "actual_issue_count": 0,
+                "expected_issue_messages": [],
+                "actual_issue_messages": [],
+                "expected_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "actual_complete_issues_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "expected_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9",
+                "actual_core_sha256": "6a38a2e0b616eee77785e4774c7339491819160a965ee339567f09703a1484a9"
+              }
+            }
+          ]
+        }
+      },
+      "comparison": {
+        "parity_cases": 18,
+        "parity_matches": 18,
+        "parity_mismatches": 0,
+        "expected_status_failures": 0,
+        "failures": [],
+        "failure_count": 0
+      },
+      "observed_wasm_linear_memory_bytes": [
+        94896128
+      ],
+      "warnings_promotion": {
+        "issue_identity_equal": true,
+        "all_promoted_to_error": true,
+        "issue_identity_sha256": "50ce3b67ef167eb3f11e68371d453544e228e729ddd53f59330cdce9051e103f",
+        "ordered_messages": [
+          "Segment classified as zh-hans (gap=0.101)",
+          "Segment classified as zh-hans (gap=0.174)",
+          "Japanese-unattested simplified Chinese form detected: 们"
+        ]
+      },
+      "completed": true
+    },
+    "runtime": {
+      "source": "Cloudflare Wrangler live tail JSON; only timing fields and allowlisted measurement header retained",
+      "correlation": "Six serial requests labelled by size, matched to six ordered labelled traces; no cold/warm or same-isolate assertion",
+      "requests": [
+        {
+          "input_utf8_bytes": 1024,
+          "repeat": false,
+          "status": 200,
+          "client_elapsed_ms": 7946.597,
+          "wasm_linear_memory_bytes": 102236160,
+          "cpu_time_ms": 6001,
+          "worker_wall_time_ms": 7257,
+          "event_timestamp_ms": 1788963992459,
+          "outcome": "ok"
+        },
+        {
+          "input_utf8_bytes": 10240,
+          "repeat": false,
+          "status": 200,
+          "client_elapsed_ms": 7123.892,
+          "wasm_linear_memory_bytes": 100139008,
+          "cpu_time_ms": 5725,
+          "worker_wall_time_ms": 6541,
+          "event_timestamp_ms": 1788964000245,
+          "outcome": "ok"
+        },
+        {
+          "input_utf8_bytes": 102400,
+          "repeat": false,
+          "status": 200,
+          "client_elapsed_ms": 1118.474,
+          "wasm_linear_memory_bytes": 102236160,
+          "cpu_time_ms": 75,
+          "worker_wall_time_ms": 78,
+          "event_timestamp_ms": 1788964008101,
+          "outcome": "ok"
+        },
+        {
+          "input_utf8_bytes": 262144,
+          "repeat": false,
+          "status": 200,
+          "client_elapsed_ms": 983.939,
+          "wasm_linear_memory_bytes": 100139008,
+          "cpu_time_ms": 125,
+          "worker_wall_time_ms": 131,
+          "event_timestamp_ms": 1788964009136,
+          "outcome": "ok"
+        },
+        {
+          "input_utf8_bytes": 1024,
+          "repeat": true,
+          "status": 200,
+          "client_elapsed_ms": 5934.279,
+          "wasm_linear_memory_bytes": 94896128,
+          "cpu_time_ms": 4239,
+          "worker_wall_time_ms": 5376,
+          "event_timestamp_ms": 1788964034376,
+          "outcome": "ok"
+        },
+        {
+          "input_utf8_bytes": 10240,
+          "repeat": true,
+          "status": 200,
+          "client_elapsed_ms": 5893.174,
+          "wasm_linear_memory_bytes": 102236160,
+          "cpu_time_ms": 4091,
+          "worker_wall_time_ms": 5396,
+          "event_timestamp_ms": 1788964040323,
+          "outcome": "ok"
+        }
+      ],
+      "additional_unlabelled_trace": {
+        "outcome": "ok",
+        "cpuTime": 4199,
+        "wallTime": 5220,
+        "eventTimestamp": 1788963877014
+      },
+      "startup_time_ms": 16.0,
+      "deployment_log": {
+        "source": "wrangler-2026-09-09_14-05-36_184.log",
+        "startup_time_ms": 16,
+        "upload_kib": 13076.41,
+        "upload_gzip_kib": 9037.53,
+        "uploaded_and_deployed_validation_worker": true
+      },
+      "peak_total_isolate_memory_bytes": null,
+      "references": [
+        "https://developers.cloudflare.com/changelog/post/2025-04-09-workers-timing/",
+        "https://developers.cloudflare.com/workers/observability/logs/real-time-logs/"
+      ]
+    },
+    "remaining_evidence": [
+      "peak total isolate memory including JavaScript and Wasm",
+      "cold versus warm attribution for first-request and warm-CPU criteria"
+    ]
   },
   "decision": "insufficient-evidence-stop",
   "local_startup_profiling": {
@@ -349,6 +1617,2306 @@
       "wrangler check startup --config wrangler.validation.jsonc: static-files-directory detection error",
       "wrangler check startup --args \"--config wrangler.validation.jsonc\": CLI argument parsing error"
     ],
-    "note": "Neither attempt produced startup_time_ms. Deployed startup still requires authenticated upload."
+    "note": "Neither local attempt produced startup_time_ms. The later successful user deployment log reports Worker Startup Time 16 ms; see deployed_measurements.runtime.deployment_log. Live tail CPU time is separate."
+  },
+  "improvement_measurements": {
+    "change": "Worker-only GOMEMLIMIT=48MiB and isolate/request/initialization diagnostics; core, CLI and models unchanged",
+    "comparison_method": "Same instrumented bundle; control removes only go.env.GOMEMLIMIT assignment from generated JS. Separate fresh local workerd processes, one run each; timings are observations, not a benchmark distribution.",
+    "before": {
+      "measured_at": "2026-09-09T14:48:36.376Z",
+      "scope": "local Miniflare/workerd HTTP",
+      "bundle_sha256": "68b68330be0a188b7584f73c99f77b9db6c257e237ed73b8b763394c1b68b85c",
+      "peak_isolate_memory_bytes": null,
+      "method": "client wall time; response isolate identity and initialization state; sampled Wasm capacity (not total isolate peak); CPU requires separate profiler or correlated live tail",
+      "records": [
+        {
+          "label": "first-1KiB",
+          "concurrency": 1,
+          "input_bytes": 1024,
+          "status": 200,
+          "client_elapsed_ms": 1133.9895000000001,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 93847552,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "reuse-1024",
+          "concurrency": 1,
+          "input_bytes": 1024,
+          "status": 200,
+          "client_elapsed_ms": 4.93162499999994,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 2,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 93847552,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "reuse-10240",
+          "concurrency": 1,
+          "input_bytes": 10240,
+          "status": 200,
+          "client_elapsed_ms": 8.711999999999989,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 3,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 93847552,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "reuse-102400",
+          "concurrency": 1,
+          "input_bytes": 102400,
+          "status": 200,
+          "client_elapsed_ms": 19.841791000000057,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 4,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 93847552,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "reuse-262144",
+          "concurrency": 1,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 38.65058399999998,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 5,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 93847552,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "empty",
+          "concurrency": 1,
+          "input_bytes": 0,
+          "status": 200,
+          "client_elapsed_ms": 3.0212920000001304,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 6,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 93847552,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "decoded-overflow",
+          "concurrency": 1,
+          "input_bytes": 262145,
+          "status": 413,
+          "client_elapsed_ms": 3.6590419999999995,
+          "cpu_ms": null,
+          "isolate_id": null,
+          "sequence": null,
+          "initialization": null,
+          "wasm_linear_memory_bytes": null,
+          "summary": null
+        },
+        {
+          "label": "escaped-256KiB",
+          "concurrency": 1,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 38.311916999999994,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 7,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 93847552,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "raw-overflow",
+          "concurrency": 1,
+          "input_bytes": 0,
+          "status": 413,
+          "client_elapsed_ms": 5.359375,
+          "cpu_ms": null,
+          "isolate_id": null,
+          "sequence": null,
+          "initialization": null,
+          "wasm_linear_memory_bytes": null,
+          "summary": null
+        },
+        {
+          "label": "concurrent-0",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 39.70425,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 8,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 96468992,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          }
+        },
+        {
+          "label": "concurrent-1",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 157.77345800000012,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 9,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 104333312,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          }
+        },
+        {
+          "label": "concurrent-3",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 157.21895799999993,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 11,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 104333312,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          }
+        },
+        {
+          "label": "concurrent-2",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 157.52400000000011,
+          "cpu_ms": null,
+          "isolate_id": "9dc4868f-1cc1-4f0c-bc53-02c3c88dbe29",
+          "sequence": 10,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 104333312,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          }
+        }
+      ]
+    },
+    "after": {
+      "measured_at": "2026-09-09T14:48:25.870Z",
+      "scope": "local Miniflare/workerd HTTP",
+      "bundle_sha256": "63ef5d420e365ea7bf5a77b5881931b7fe819240216c8cfc289b465e78bbb19d",
+      "peak_isolate_memory_bytes": null,
+      "method": "client wall time; response isolate identity and initialization state; sampled Wasm capacity (not total isolate peak); CPU requires separate profiler or correlated live tail",
+      "records": [
+        {
+          "label": "first-1KiB",
+          "concurrency": 1,
+          "input_bytes": 1024,
+          "status": 200,
+          "client_elapsed_ms": 1102.709709,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "reuse-1024",
+          "concurrency": 1,
+          "input_bytes": 1024,
+          "status": 200,
+          "client_elapsed_ms": 4.113833999999997,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 2,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "reuse-10240",
+          "concurrency": 1,
+          "input_bytes": 10240,
+          "status": 200,
+          "client_elapsed_ms": 5.3158750000000055,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 3,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "reuse-102400",
+          "concurrency": 1,
+          "input_bytes": 102400,
+          "status": 200,
+          "client_elapsed_ms": 17.849665999999843,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 4,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "reuse-262144",
+          "concurrency": 1,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 42.53758299999981,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 5,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "empty",
+          "concurrency": 1,
+          "input_bytes": 0,
+          "status": 200,
+          "client_elapsed_ms": 2.3666249999998854,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 6,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "decoded-overflow",
+          "concurrency": 1,
+          "input_bytes": 262145,
+          "status": 413,
+          "client_elapsed_ms": 3.250791000000163,
+          "cpu_ms": null,
+          "isolate_id": null,
+          "sequence": null,
+          "initialization": null,
+          "wasm_linear_memory_bytes": null,
+          "summary": null
+        },
+        {
+          "label": "escaped-256KiB",
+          "concurrency": 1,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 41.67533299999991,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 7,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          }
+        },
+        {
+          "label": "raw-overflow",
+          "concurrency": 1,
+          "input_bytes": 0,
+          "status": 413,
+          "client_elapsed_ms": 5.264791999999943,
+          "cpu_ms": null,
+          "isolate_id": null,
+          "sequence": null,
+          "initialization": null,
+          "wasm_linear_memory_bytes": null,
+          "summary": null
+        },
+        {
+          "label": "concurrent-1",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 44.35820799999988,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 8,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          }
+        },
+        {
+          "label": "concurrent-2",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 173.01424999999995,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 9,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          }
+        },
+        {
+          "label": "concurrent-3",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 172.82733299999995,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 10,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          }
+        },
+        {
+          "label": "concurrent-0",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 173.815292,
+          "cpu_ms": null,
+          "isolate_id": "62087807-3b1b-46d2-ba25-4a51638f5ddb",
+          "sequence": 11,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          }
+        }
+      ]
+    },
+    "decision": "insufficient evidence: total continuous peak isolate memory remains unproven; cold client elapsed time exceeds 10 seconds in observed cases. Deployed CPU and startup measurements are available.",
+    "deployed_verification": {
+      "measured_at": "2026-09-09T15:03:09.850Z",
+      "scope": "deployed HTTP",
+      "bundle_sha256": null,
+      "peak_isolate_memory_bytes": null,
+      "method": "client wall time; response isolate identity and initialization state; sampled Wasm capacity (not total isolate peak); live tail CPU and wall time joined by measurement_id; scriptVersion matches deployment log",
+      "records": [
+        {
+          "label": "first-1KiB",
+          "measurement_id": "152ec78542e499087ad62cd7-first-1KiB",
+          "concurrency": 1,
+          "input_bytes": 1024,
+          "status": 200,
+          "client_elapsed_ms": 6019.244916,
+          "cpu_ms": 4274,
+          "isolate_id": "472e8437-e404-4ce2-948a-50acdafabbfb",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 5386
+        },
+        {
+          "label": "reuse-1024",
+          "measurement_id": "afca1210b4090da8b2101d40-reuse-1024",
+          "concurrency": 1,
+          "input_bytes": 1024,
+          "status": 200,
+          "client_elapsed_ms": 205.68712500000038,
+          "cpu_ms": 3,
+          "isolate_id": "472e8437-e404-4ce2-948a-50acdafabbfb",
+          "sequence": 2,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 4
+        },
+        {
+          "label": "reuse-10240",
+          "measurement_id": "58046027ed8095f3836e2dc6-reuse-10240",
+          "concurrency": 1,
+          "input_bytes": 10240,
+          "status": 200,
+          "client_elapsed_ms": 211.01566600000024,
+          "cpu_ms": 8,
+          "isolate_id": "472e8437-e404-4ce2-948a-50acdafabbfb",
+          "sequence": 3,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 12
+        },
+        {
+          "label": "reuse-102400",
+          "measurement_id": "1d2690c9e4989bff307ad40b-reuse-102400",
+          "concurrency": 1,
+          "input_bytes": 102400,
+          "status": 200,
+          "client_elapsed_ms": 631.3240829999995,
+          "cpu_ms": 55,
+          "isolate_id": "472e8437-e404-4ce2-948a-50acdafabbfb",
+          "sequence": 4,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 57
+        },
+        {
+          "label": "reuse-262144",
+          "measurement_id": "948c571f2a04d51512a25d7e-reuse-262144",
+          "concurrency": 1,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 702.3067089999995,
+          "cpu_ms": 123,
+          "isolate_id": "472e8437-e404-4ce2-948a-50acdafabbfb",
+          "sequence": 5,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 129
+        },
+        {
+          "label": "empty",
+          "measurement_id": "0481695bb673592d953718ed-empty",
+          "concurrency": 1,
+          "input_bytes": 0,
+          "status": 200,
+          "client_elapsed_ms": 198.96320800000012,
+          "cpu_ms": 1,
+          "isolate_id": "472e8437-e404-4ce2-948a-50acdafabbfb",
+          "sequence": 6,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 1
+        },
+        {
+          "label": "decoded-overflow",
+          "measurement_id": "9c6551b64cb764250eb8d671-decoded-overflow",
+          "concurrency": 1,
+          "input_bytes": 262145,
+          "status": 413,
+          "client_elapsed_ms": 401.84962500000074,
+          "cpu_ms": 5,
+          "isolate_id": null,
+          "sequence": null,
+          "initialization": null,
+          "wasm_linear_memory_bytes": null,
+          "summary": null,
+          "worker_wall_ms": 15
+        },
+        {
+          "label": "escaped-256KiB",
+          "measurement_id": "0627fb918446b71226d010ed-escaped-256KiB",
+          "concurrency": 1,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 11492.620250000002,
+          "cpu_ms": 7769,
+          "isolate_id": "0dfbe6d3-1344-4024-a32d-7c2138a300f0",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 85458944,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 9554
+        },
+        {
+          "label": "raw-overflow",
+          "measurement_id": "727948d84f239ab799494064-raw-overflow",
+          "concurrency": 1,
+          "input_bytes": 0,
+          "status": 413,
+          "client_elapsed_ms": 3163.581709000002,
+          "cpu_ms": 1,
+          "isolate_id": null,
+          "sequence": null,
+          "initialization": null,
+          "wasm_linear_memory_bytes": null,
+          "summary": null,
+          "worker_wall_ms": 2
+        },
+        {
+          "label": "concurrent-0",
+          "measurement_id": "fd949e423d8d5540fb71569b-concurrent-0",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 1848.5788329999996,
+          "cpu_ms": 272,
+          "isolate_id": "0dfbe6d3-1344-4024-a32d-7c2138a300f0",
+          "sequence": 2,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 85458944,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          },
+          "worker_wall_ms": 280
+        },
+        {
+          "label": "concurrent-2",
+          "measurement_id": "2ddf489985af410529ff664f-concurrent-2",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 6486.941124999998,
+          "cpu_ms": 4265,
+          "isolate_id": "5ad6cdcf-9f46-4938-aaf2-785d6d81da78",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          },
+          "worker_wall_ms": 5434
+        },
+        {
+          "label": "concurrent-3",
+          "measurement_id": "5b27c63318a0ba6e3865cc70-concurrent-3",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 8962.340208999998,
+          "cpu_ms": 6470,
+          "isolate_id": "e6a9b963-8fdb-4ee3-bf28-1987b0c917d2",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          },
+          "worker_wall_ms": 7572
+        },
+        {
+          "label": "concurrent-1",
+          "measurement_id": "511bc46aa8a263dce349337c-concurrent-1",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 10454.219625000002,
+          "cpu_ms": 7083,
+          "isolate_id": "31afb990-7e3e-46ae-a19d-e6cea13f21b9",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 88080384,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          },
+          "worker_wall_ms": 9534
+        }
+      ],
+      "live_tail": [
+        {
+          "outcome": "ok",
+          "cpuTime": 3,
+          "wallTime": 4,
+          "eventTimestamp": 1788966162520,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "afca1210b4090da8b2101d40-reuse-1024"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 4274,
+          "wallTime": 5386,
+          "eventTimestamp": 1788966156928,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "152ec78542e499087ad62cd7-first-1KiB"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 8,
+          "wallTime": 12,
+          "eventTimestamp": 1788966162724,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "58046027ed8095f3836e2dc6-reuse-10240"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 55,
+          "wallTime": 57,
+          "eventTimestamp": 1788966163310,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "1d2690c9e4989bff307ad40b-reuse-102400"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 123,
+          "wallTime": 129,
+          "eventTimestamp": 1788966163942,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "948c571f2a04d51512a25d7e-reuse-262144"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 1,
+          "wallTime": 1,
+          "eventTimestamp": 1788966164269,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "0481695bb673592d953718ed-empty"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 5,
+          "wallTime": 15,
+          "eventTimestamp": 1788966164656,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "9c6551b64cb764250eb8d671-decoded-overflow"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 7769,
+          "wallTime": 9554,
+          "eventTimestamp": 1788966166610,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "0627fb918446b71226d010ed-escaped-256KiB"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 1,
+          "wallTime": 2,
+          "eventTimestamp": 1788966179273,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "727948d84f239ab799494064-raw-overflow"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 272,
+          "wallTime": 280,
+          "eventTimestamp": 1788966180898,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "fd949e423d8d5540fb71569b-concurrent-0"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 4265,
+          "wallTime": 5434,
+          "eventTimestamp": 1788966180393,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "2ddf489985af410529ff664f-concurrent-2"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 6470,
+          "wallTime": 7572,
+          "eventTimestamp": 1788966180710,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "5b27c63318a0ba6e3865cc70-concurrent-3"
+        },
+        {
+          "outcome": "ok",
+          "cpuTime": 7083,
+          "wallTime": 9534,
+          "eventTimestamp": 1788966180257,
+          "scriptVersion": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          },
+          "measurement_id": "511bc46aa8a263dce349337c-concurrent-1"
+        }
+      ],
+      "deployment": {
+        "version_id": "820f287a-573d-4b9c-925d-5021640dd2eb",
+        "log": "wrangler-2026-09-09_14-57-26_226.log",
+        "upload_kib": 13076.83,
+        "gzip_kib": 9037.68,
+        "startup_ms": 35
+      }
+    },
+    "additional_deployed_verification": {
+      "scope": "Additional deployed HTTP checks; existing live-tail measurements preserved separately",
+      "http_runs": [
+        {
+          "measured_at": "2026-09-09T15:32:48.773Z",
+          "scope": "deployed HTTP",
+          "bundle_sha256": null,
+          "peak_isolate_memory_bytes": null,
+          "method": "client wall time; response isolate identity and initialization state; sampled Wasm capacity (not total isolate peak); CPU requires separate profiler or correlated live tail",
+          "records": [
+            {
+              "label": "first-1KiB",
+              "measurement_id": "14065016040ba7c8559e8bf7-first-1KiB",
+              "concurrency": 1,
+              "input_bytes": 1024,
+              "status": 200,
+              "client_elapsed_ms": 7288.837958,
+              "cpu_ms": null,
+              "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 88604672,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-1024",
+              "measurement_id": "500c1faa6a6ef1fe5ffe7662-reuse-1024",
+              "concurrency": 1,
+              "input_bytes": 1024,
+              "status": 200,
+              "client_elapsed_ms": 153.75420799999938,
+              "cpu_ms": null,
+              "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+              "sequence": 2,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 88604672,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-10240",
+              "measurement_id": "ef9fe9e8c4f830d247828627-reuse-10240",
+              "concurrency": 1,
+              "input_bytes": 10240,
+              "status": 200,
+              "client_elapsed_ms": 168.23720800000046,
+              "cpu_ms": null,
+              "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+              "sequence": 3,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 88604672,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-102400",
+              "measurement_id": "f1df68078e4465da1cea9304-reuse-102400",
+              "concurrency": 1,
+              "input_bytes": 102400,
+              "status": 200,
+              "client_elapsed_ms": 523.003999999999,
+              "cpu_ms": null,
+              "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+              "sequence": 4,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 88604672,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-262144",
+              "measurement_id": "d3c70fcb7dabc92f7cf282d5-reuse-262144",
+              "concurrency": 1,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 835.9341249999998,
+              "cpu_ms": null,
+              "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+              "sequence": 5,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 88604672,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "empty",
+              "measurement_id": "777bb23196ea247068fb4662-empty",
+              "concurrency": 1,
+              "input_bytes": 0,
+              "status": 200,
+              "client_elapsed_ms": 150.00304200000028,
+              "cpu_ms": null,
+              "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+              "sequence": 6,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 88604672,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "decoded-overflow",
+              "measurement_id": "78d381a675e847fff2525a90-decoded-overflow",
+              "concurrency": 1,
+              "input_bytes": 262145,
+              "status": 413,
+              "client_elapsed_ms": 291.5294580000009,
+              "cpu_ms": null,
+              "isolate_id": null,
+              "sequence": null,
+              "initialization": null,
+              "wasm_linear_memory_bytes": null,
+              "summary": null
+            },
+            {
+              "label": "escaped-256KiB",
+              "measurement_id": "a668ff6feddf93e5f16fbdd9-escaped-256KiB",
+              "concurrency": 1,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 8366.265291,
+              "cpu_ms": null,
+              "isolate_id": "566dfac5-f7a4-4c2a-9fd7-11ec18205289",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 89653248,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "raw-overflow",
+              "measurement_id": "3889e8df3f583a7137755119-raw-overflow",
+              "concurrency": 1,
+              "input_bytes": 0,
+              "status": 413,
+              "client_elapsed_ms": 1888.4206659999982,
+              "cpu_ms": null,
+              "isolate_id": null,
+              "sequence": null,
+              "initialization": null,
+              "wasm_linear_memory_bytes": null,
+              "summary": null
+            },
+            {
+              "label": "concurrent-3",
+              "measurement_id": "35602c1502a70c2af9c802f1-concurrent-3",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 1206.132290999998,
+              "cpu_ms": null,
+              "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+              "sequence": 7,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 88604672,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            },
+            {
+              "label": "concurrent-0",
+              "measurement_id": "ab8090439837199a05b6667f-concurrent-0",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 1486.6445000000022,
+              "cpu_ms": null,
+              "isolate_id": "566dfac5-f7a4-4c2a-9fd7-11ec18205289",
+              "sequence": 2,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 89653248,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            },
+            {
+              "label": "concurrent-2",
+              "measurement_id": "1eaaa74f59d050808688ad81-concurrent-2",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 6720.5167919999985,
+              "cpu_ms": null,
+              "isolate_id": "50518d40-4e4d-4487-9e05-8c96f49175df",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 89653248,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            },
+            {
+              "label": "concurrent-1",
+              "measurement_id": "73968338dc1c965116e5e01b-concurrent-1",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 10459.106790999998,
+              "cpu_ms": null,
+              "isolate_id": "28c22642-940c-4a5f-8504-7f33fc2d1aed",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 88080384,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            }
+          ]
+        },
+        {
+          "measured_at": "2026-09-09T15:35:01.040Z",
+          "scope": "deployed HTTP",
+          "bundle_sha256": null,
+          "peak_isolate_memory_bytes": null,
+          "method": "client wall time; response isolate identity and initialization state; sampled Wasm capacity (not total isolate peak); CPU requires separate profiler or correlated live tail",
+          "records": [
+            {
+              "label": "first-1KiB",
+              "measurement_id": "5e44c80ceca8b320610c89c2-first-1KiB",
+              "concurrency": 1,
+              "input_bytes": 1024,
+              "status": 200,
+              "client_elapsed_ms": 5324.9659169999995,
+              "cpu_ms": null,
+              "isolate_id": "fa5049c5-8c8b-444d-a3a4-26e01a5e6ba1",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 82837504,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-1024",
+              "measurement_id": "580325b6cc0bdd348055e2c4-reuse-1024",
+              "concurrency": 1,
+              "input_bytes": 1024,
+              "status": 200,
+              "client_elapsed_ms": 194.02920799999993,
+              "cpu_ms": null,
+              "isolate_id": "fa5049c5-8c8b-444d-a3a4-26e01a5e6ba1",
+              "sequence": 2,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 82837504,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-10240",
+              "measurement_id": "25dc08aa3d1754dbb0969031-reuse-10240",
+              "concurrency": 1,
+              "input_bytes": 10240,
+              "status": 200,
+              "client_elapsed_ms": 202.0266670000001,
+              "cpu_ms": null,
+              "isolate_id": "fa5049c5-8c8b-444d-a3a4-26e01a5e6ba1",
+              "sequence": 3,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 82837504,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-102400",
+              "measurement_id": "8dd4ffc0daecf0f85a57ef40-reuse-102400",
+              "concurrency": 1,
+              "input_bytes": 102400,
+              "status": 200,
+              "client_elapsed_ms": 629.8157080000001,
+              "cpu_ms": null,
+              "isolate_id": "fa5049c5-8c8b-444d-a3a4-26e01a5e6ba1",
+              "sequence": 4,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 82837504,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-262144",
+              "measurement_id": "12e2a234e3d241ebd8f39fb1-reuse-262144",
+              "concurrency": 1,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 668.2956669999994,
+              "cpu_ms": null,
+              "isolate_id": "fa5049c5-8c8b-444d-a3a4-26e01a5e6ba1",
+              "sequence": 5,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 82837504,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "empty",
+              "measurement_id": "4276ae668a755a492eceb4e2-empty",
+              "concurrency": 1,
+              "input_bytes": 0,
+              "status": 200,
+              "client_elapsed_ms": 192.80633300000045,
+              "cpu_ms": null,
+              "isolate_id": "fa5049c5-8c8b-444d-a3a4-26e01a5e6ba1",
+              "sequence": 6,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 82837504,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "decoded-overflow",
+              "measurement_id": "6b1ffe4354345682a1048093-decoded-overflow",
+              "concurrency": 1,
+              "input_bytes": 262145,
+              "status": 413,
+              "client_elapsed_ms": 382.5805419999997,
+              "cpu_ms": null,
+              "isolate_id": null,
+              "sequence": null,
+              "initialization": null,
+              "wasm_linear_memory_bytes": null,
+              "summary": null
+            },
+            {
+              "label": "escaped-256KiB",
+              "measurement_id": "7defbc431ee68f33336b0d95-escaped-256KiB",
+              "concurrency": 1,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 8708.010125,
+              "cpu_ms": null,
+              "isolate_id": "fc8bca35-9dae-4e81-a9d1-706cb0772f97",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 85458944,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "raw-overflow",
+              "measurement_id": "bb77d5e19269ae719490f483-raw-overflow",
+              "concurrency": 1,
+              "input_bytes": 0,
+              "status": 413,
+              "client_elapsed_ms": 2107.0155830000003,
+              "cpu_ms": null,
+              "isolate_id": null,
+              "sequence": null,
+              "initialization": null,
+              "wasm_linear_memory_bytes": null,
+              "summary": null
+            },
+            {
+              "label": "concurrent-0",
+              "measurement_id": "3d03f7d40d79661ae0ed0b24-concurrent-0",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 1158.9716249999983,
+              "cpu_ms": null,
+              "isolate_id": "fc8bca35-9dae-4e81-a9d1-706cb0772f97",
+              "sequence": 2,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 85458944,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            },
+            {
+              "label": "concurrent-3",
+              "measurement_id": "ce476607b6995d85dd96b05b-concurrent-3",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 6158.431957999997,
+              "cpu_ms": null,
+              "isolate_id": "bff38651-642d-4d70-a4cd-c8baf79b57df",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 91750400,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            },
+            {
+              "label": "concurrent-2",
+              "measurement_id": "234b70707d9df55460eb3345-concurrent-2",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 7004.130040999997,
+              "cpu_ms": null,
+              "isolate_id": "b9e83705-50d8-4069-b91f-0fee3aefe663",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 85458944,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            },
+            {
+              "label": "concurrent-1",
+              "measurement_id": "b8282c50a210c9d283a3759d-concurrent-1",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 10239.214082999999,
+              "cpu_ms": null,
+              "isolate_id": "9baee436-fe1d-4c74-b2db-fc0156e2079a",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 82837504,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            }
+          ]
+        },
+        {
+          "measured_at": "2026-09-09T15:36:58.210Z",
+          "scope": "deployed HTTP",
+          "bundle_sha256": null,
+          "peak_isolate_memory_bytes": null,
+          "method": "client wall time; response isolate identity and initialization state; sampled Wasm capacity (not total isolate peak); CPU requires separate profiler or correlated live tail",
+          "records": [
+            {
+              "label": "first-1KiB",
+              "measurement_id": "1680a3712384cc4de6973646-first-1KiB",
+              "concurrency": 1,
+              "input_bytes": 1024,
+              "status": 200,
+              "client_elapsed_ms": 8682.213333000002,
+              "cpu_ms": null,
+              "isolate_id": "9454138f-63e9-41a0-9435-6e9f02d42249",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 89653248,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-1024",
+              "measurement_id": "197796bc3b2a653f42351642-reuse-1024",
+              "concurrency": 1,
+              "input_bytes": 1024,
+              "status": 200,
+              "client_elapsed_ms": 202.01208299999962,
+              "cpu_ms": null,
+              "isolate_id": "9454138f-63e9-41a0-9435-6e9f02d42249",
+              "sequence": 2,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 89653248,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-10240",
+              "measurement_id": "bb4adba405e6d66e7343cd8e-reuse-10240",
+              "concurrency": 1,
+              "input_bytes": 10240,
+              "status": 200,
+              "client_elapsed_ms": 212.18874999999935,
+              "cpu_ms": null,
+              "isolate_id": "9454138f-63e9-41a0-9435-6e9f02d42249",
+              "sequence": 3,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 89653248,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-102400",
+              "measurement_id": "f203c9658285186ffcedd6bf-reuse-102400",
+              "concurrency": 1,
+              "input_bytes": 102400,
+              "status": 200,
+              "client_elapsed_ms": 655.5499999999993,
+              "cpu_ms": null,
+              "isolate_id": "9454138f-63e9-41a0-9435-6e9f02d42249",
+              "sequence": 4,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 89653248,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "reuse-262144",
+              "measurement_id": "399303cc13e2f9b819ac8434-reuse-262144",
+              "concurrency": 1,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 1090.4102919999987,
+              "cpu_ms": null,
+              "isolate_id": "9454138f-63e9-41a0-9435-6e9f02d42249",
+              "sequence": 5,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 89653248,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "empty",
+              "measurement_id": "3c1548192d4d69f4b54bf107-empty",
+              "concurrency": 1,
+              "input_bytes": 0,
+              "status": 200,
+              "client_elapsed_ms": 209.17716700000165,
+              "cpu_ms": null,
+              "isolate_id": "9454138f-63e9-41a0-9435-6e9f02d42249",
+              "sequence": 6,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 89653248,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "decoded-overflow",
+              "measurement_id": "f70d1be9214fd72d8cb4fdc4-decoded-overflow",
+              "concurrency": 1,
+              "input_bytes": 262145,
+              "status": 413,
+              "client_elapsed_ms": 390.7781249999989,
+              "cpu_ms": null,
+              "isolate_id": null,
+              "sequence": null,
+              "initialization": null,
+              "wasm_linear_memory_bytes": null,
+              "summary": null
+            },
+            {
+              "label": "escaped-256KiB",
+              "measurement_id": "9a0531b2a7518f631a5917f3-escaped-256KiB",
+              "concurrency": 1,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 6675.0427500000005,
+              "cpu_ms": null,
+              "isolate_id": "7112eb3c-cb4e-4003-824f-1c76f8af42d1",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 88080384,
+              "summary": {
+                "errors": 0,
+                "warnings": 0,
+                "issues": 0
+              }
+            },
+            {
+              "label": "raw-overflow",
+              "measurement_id": "94c2a4713253d2f82634030e-raw-overflow",
+              "concurrency": 1,
+              "input_bytes": 0,
+              "status": 413,
+              "client_elapsed_ms": 1682.4422080000004,
+              "cpu_ms": null,
+              "isolate_id": null,
+              "sequence": null,
+              "initialization": null,
+              "wasm_linear_memory_bytes": null,
+              "summary": null
+            },
+            {
+              "label": "concurrent-3",
+              "measurement_id": "2795d926e56e3fea844cccd6-concurrent-3",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 1132.135416000001,
+              "cpu_ms": null,
+              "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+              "sequence": 8,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 88604672,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            },
+            {
+              "label": "concurrent-0",
+              "measurement_id": "d5d188c71a905318c59e0b09-concurrent-0",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 1524.788625000001,
+              "cpu_ms": null,
+              "isolate_id": "7112eb3c-cb4e-4003-824f-1c76f8af42d1",
+              "sequence": 2,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 88080384,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            },
+            {
+              "label": "concurrent-1",
+              "measurement_id": "771bb306189706ce55bd661b-concurrent-1",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 1565.5195419999982,
+              "cpu_ms": null,
+              "isolate_id": "9baee436-fe1d-4c74-b2db-fc0156e2079a",
+              "sequence": 2,
+              "initialization": "warm",
+              "wasm_linear_memory_bytes": 82837504,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            },
+            {
+              "label": "concurrent-2",
+              "measurement_id": "ed54fbef525053a901a9d3d7-concurrent-2",
+              "concurrency": 4,
+              "input_bytes": 262144,
+              "status": 200,
+              "client_elapsed_ms": 6111.858250000001,
+              "cpu_ms": null,
+              "isolate_id": "3cc44327-5190-419b-b13f-247f68dc6367",
+              "sequence": 1,
+              "initialization": "cold",
+              "wasm_linear_memory_bytes": 88604672,
+              "summary": {
+                "errors": 1,
+                "warnings": 0,
+                "issues": 1
+              }
+            }
+          ]
+        }
+      ],
+      "native_parity_and_input_checks": {
+        "scope": "deployed HTTP versus native CLI; positional fixtures sent sequentially",
+        "records": [
+          {
+            "label": "Japanese",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 42,
+            "client_elapsed_ms": 7596.052625012817,
+            "isolate_id": "17688419-353f-4304-8ea3-553a7d9bebb9",
+            "initialization": "cold"
+          },
+          {
+            "label": "simplified",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 42,
+            "client_elapsed_ms": 508.38766698143445,
+            "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+            "initialization": "warm"
+          },
+          {
+            "label": "traditional",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 45,
+            "client_elapsed_ms": 674.0912089881022,
+            "isolate_id": "50518d40-4e4d-4487-9e05-8c96f49175df",
+            "initialization": "warm"
+          },
+          {
+            "label": "mixed",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 87,
+            "client_elapsed_ms": 7827.688999997918,
+            "isolate_id": "961da595-2183-4692-8539-cee3f7ee5074",
+            "initialization": "cold"
+          },
+          {
+            "label": "Markdown-URL",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 134,
+            "client_elapsed_ms": 458.3682919910643,
+            "isolate_id": "17688419-353f-4304-8ea3-553a7d9bebb9",
+            "initialization": "warm"
+          },
+          {
+            "label": "include-code",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 43,
+            "client_elapsed_ms": 5965.35295798094,
+            "isolate_id": "4f10bd7f-ebf0-4bb9-8b6b-6ca6e710c0b0",
+            "initialization": "cold"
+          },
+          {
+            "label": "emoji",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 32,
+            "client_elapsed_ms": 5716.913167008897,
+            "isolate_id": "339a730d-1306-4e79-8d63-308aece6be86",
+            "initialization": "cold"
+          },
+          {
+            "label": "warnings",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 45,
+            "client_elapsed_ms": 3585.5002499883994,
+            "isolate_id": "d4602e9e-44ac-47dd-9f96-90cfb821431e",
+            "initialization": "cold"
+          },
+          {
+            "label": "promoted",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 45,
+            "client_elapsed_ms": 510.40425000246614,
+            "isolate_id": "17688419-353f-4304-8ea3-553a7d9bebb9",
+            "initialization": "warm"
+          },
+          {
+            "label": "empty",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 0,
+            "client_elapsed_ms": 10334.900707995985,
+            "isolate_id": "1ecb1712-4a3b-40c6-bd0c-e98cf327cf5a",
+            "initialization": "cold"
+          },
+          {
+            "label": "size-1024",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 1024,
+            "client_elapsed_ms": 541.0200000042096,
+            "isolate_id": "339a730d-1306-4e79-8d63-308aece6be86",
+            "initialization": "warm"
+          },
+          {
+            "label": "size-10240",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 10240,
+            "client_elapsed_ms": 529.5225000008941,
+            "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+            "initialization": "warm"
+          },
+          {
+            "label": "size-102400",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 102400,
+            "client_elapsed_ms": 1306.6348339780234,
+            "isolate_id": "7112eb3c-cb4e-4003-824f-1c76f8af42d1",
+            "initialization": "warm"
+          },
+          {
+            "label": "size-262144",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 262144,
+            "client_elapsed_ms": 8377.971417008666,
+            "isolate_id": "1e8b6a28-2d51-4f15-8aac-1ffec32c14a4",
+            "initialization": "cold"
+          },
+          {
+            "label": "position-0",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 262144,
+            "client_elapsed_ms": 2146.950124995783,
+            "isolate_id": "d4602e9e-44ac-47dd-9f96-90cfb821431e",
+            "initialization": "warm"
+          },
+          {
+            "label": "position-1",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 262144,
+            "client_elapsed_ms": 9195.355584000936,
+            "isolate_id": "966f8397-552b-45e2-9913-eef8149cba39",
+            "initialization": "cold"
+          },
+          {
+            "label": "position-2",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 262144,
+            "client_elapsed_ms": 7066.862749983557,
+            "isolate_id": "9ee34f03-bdda-4413-9bb7-ab48c29465a0",
+            "initialization": "cold"
+          },
+          {
+            "label": "position-3",
+            "status": 200,
+            "parity": true,
+            "input_bytes": 262144,
+            "client_elapsed_ms": 1354.5066659862641,
+            "isolate_id": "20087e01-755a-4937-a90c-920672baaee5",
+            "initialization": "warm"
+          },
+          {
+            "label": "auth-missing",
+            "status": 401
+          },
+          {
+            "label": "auth-wrong",
+            "status": 401
+          },
+          {
+            "label": "auth-scheme",
+            "status": 401
+          },
+          {
+            "label": "invalid-JSON",
+            "status": 400
+          },
+          {
+            "label": "invalid-UTF8",
+            "status": 400
+          },
+          {
+            "label": "invalid-missing-text",
+            "status": 400
+          },
+          {
+            "label": "invalid-text-type",
+            "status": 400
+          },
+          {
+            "label": "invalid-null-options",
+            "status": 400
+          },
+          {
+            "label": "invalid-unknown-key",
+            "status": 400
+          },
+          {
+            "label": "invalid-unknown-option",
+            "status": 400
+          },
+          {
+            "label": "invalid-minimum",
+            "status": 400
+          },
+          {
+            "label": "invalid-gap",
+            "status": 400
+          },
+          {
+            "label": "invalid-boolean",
+            "status": 400
+          }
+        ]
+      },
+      "live_tail_attempt": {
+        "status": "unavailable in this measurement session",
+        "oauth": "expired; standard refresh did not establish authentication",
+        "api_token": "CLOUDFLARE_API_KEY value verified active as API token; passed via CLOUDFLARE_API_TOKEN in child process only",
+        "result": "target Worker tails API rejected authentication with Cloudflare code 10000",
+        "cpu_measurements_collected": 0
+      },
+      "transport_note": "Python urllib received edge HTTP 403 code 1010; parity checks used Node fetch like the measurement runner. No Worker result was inferred from the edge rejection."
+    },
+    "rejected_parser_trials": {
+      "scope": "local Miniflare/workerd only; same Go 1.27.1, GOMEMLIMIT=48MiB, embedded data unchanged",
+      "change": "Reuse the per-line column slice in CJ ParseModel, with strings.SplitSeq or repeated strings.Cut; both reverted",
+      "method": "Three fresh local HTTP runs for each variant; rebuilt original implementation as restoration control. Native benchmark allocation reduction was not accepted as Worker performance evidence.",
+      "results": {
+        "baseline": {
+          "runs": [
+            {
+              "measured_at": "2026-09-09T15:43:14.297Z",
+              "bundle_sha256": "63ef5d420e365ea7bf5a77b5881931b7fe819240216c8cfc289b465e78bbb19d",
+              "cold_client_ms": 1146.8159580000001,
+              "wasm_capacity_after_cold_bytes": 89653248
+            },
+            {
+              "measured_at": "2026-09-09T15:43:15.925Z",
+              "bundle_sha256": "63ef5d420e365ea7bf5a77b5881931b7fe819240216c8cfc289b465e78bbb19d",
+              "cold_client_ms": 1092.7797500000001,
+              "wasm_capacity_after_cold_bytes": 79691776
+            },
+            {
+              "measured_at": "2026-09-09T15:43:17.551Z",
+              "bundle_sha256": "63ef5d420e365ea7bf5a77b5881931b7fe819240216c8cfc289b465e78bbb19d",
+              "cold_client_ms": 1104.197583,
+              "wasm_capacity_after_cold_bytes": 85458944
+            }
+          ],
+          "median_cold_client_ms": 1104.197583,
+          "max_wasm_capacity_after_cold_bytes": 89653248
+        },
+        "split_seq_reuse": {
+          "runs": [
+            {
+              "measured_at": "2026-09-09T15:43:57.434Z",
+              "bundle_sha256": "444deff5f702e426a7966d31215a1609bfef6e423140b4ac2f6916dc0e93f1a0",
+              "cold_client_ms": 1212.433583,
+              "wasm_capacity_after_cold_bytes": 156762112
+            },
+            {
+              "measured_at": "2026-09-09T15:43:59.253Z",
+              "bundle_sha256": "444deff5f702e426a7966d31215a1609bfef6e423140b4ac2f6916dc0e93f1a0",
+              "cold_client_ms": 1271.3115420000001,
+              "wasm_capacity_after_cold_bytes": 156762112
+            },
+            {
+              "measured_at": "2026-09-09T15:44:01.080Z",
+              "bundle_sha256": "444deff5f702e426a7966d31215a1609bfef6e423140b4ac2f6916dc0e93f1a0",
+              "cold_client_ms": 1265.547375,
+              "wasm_capacity_after_cold_bytes": 156762112
+            }
+          ],
+          "median_cold_client_ms": 1265.547375,
+          "max_wasm_capacity_after_cold_bytes": 156762112
+        },
+        "cut_reuse": {
+          "runs": [
+            {
+              "measured_at": "2026-09-09T15:45:15.990Z",
+              "bundle_sha256": "136f4420bdb64310d0873a7e8d1d34d9d2590c8ae954e709f21928931b3639e8",
+              "cold_client_ms": 1306.308084,
+              "wasm_capacity_after_cold_bytes": 156762112
+            },
+            {
+              "measured_at": "2026-09-09T15:45:17.850Z",
+              "bundle_sha256": "136f4420bdb64310d0873a7e8d1d34d9d2590c8ae954e709f21928931b3639e8",
+              "cold_client_ms": 1309.120792,
+              "wasm_capacity_after_cold_bytes": 156762112
+            },
+            {
+              "measured_at": "2026-09-09T15:45:19.656Z",
+              "bundle_sha256": "136f4420bdb64310d0873a7e8d1d34d9d2590c8ae954e709f21928931b3639e8",
+              "cold_client_ms": 1265.573042,
+              "wasm_capacity_after_cold_bytes": 156762112
+            }
+          ],
+          "median_cold_client_ms": 1306.308084,
+          "max_wasm_capacity_after_cold_bytes": 156762112
+        },
+        "restored_control": {
+          "cold_client_ms": 1140.947083,
+          "wasm_capacity_after_cold_bytes": 89653248,
+          "bundle_sha256": "63ef5d420e365ea7bf5a77b5881931b7fe819240216c8cfc289b465e78bbb19d"
+        }
+      },
+      "decision": "Both variants rejected: sampled Wasm capacity alone exceeded 128 MiB and cold client time regressed. Source and generated Worker restored."
+    },
+    "reauthenticated_deployed_verification": {
+      "completed": true,
+      "measured_at": "2026-09-09T16:13:18.518Z",
+      "scope": "deployed HTTP",
+      "bundle_sha256": null,
+      "peak_isolate_memory_bytes": null,
+      "method": "Client wall time and response isolate/initialization metadata, joined to live tail CPU and wall time by unique measurement_id; all script versions checked. Wasm capacity is sampled, not total peak memory.",
+      "records": [
+        {
+          "label": "first-1KiB",
+          "measurement_id": "c96848fd76995e7f0fd6c36b-first-1KiB",
+          "concurrency": 1,
+          "input_bytes": 1024,
+          "status": 200,
+          "client_elapsed_ms": 5962.152958000001,
+          "cpu_ms": 4567,
+          "isolate_id": "9f7edb71-99a8-4e41-bd64-7e7dafe91303",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 5077
+        },
+        {
+          "label": "reuse-1024",
+          "measurement_id": "66a60f65f2d5219e036a851e-reuse-1024",
+          "concurrency": 1,
+          "input_bytes": 1024,
+          "status": 200,
+          "client_elapsed_ms": 288.39300000000003,
+          "cpu_ms": 3,
+          "isolate_id": "9f7edb71-99a8-4e41-bd64-7e7dafe91303",
+          "sequence": 2,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 4
+        },
+        {
+          "label": "reuse-10240",
+          "measurement_id": "3958286c8f35de91e06f338f-reuse-10240",
+          "concurrency": 1,
+          "input_bytes": 10240,
+          "status": 200,
+          "client_elapsed_ms": 296.86445899999944,
+          "cpu_ms": 8,
+          "isolate_id": "9f7edb71-99a8-4e41-bd64-7e7dafe91303",
+          "sequence": 3,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 9
+        },
+        {
+          "label": "reuse-102400",
+          "measurement_id": "6640bcba082f688d8d458200-reuse-102400",
+          "concurrency": 1,
+          "input_bytes": 102400,
+          "status": 200,
+          "client_elapsed_ms": 888.2165839999998,
+          "cpu_ms": 55,
+          "isolate_id": "9f7edb71-99a8-4e41-bd64-7e7dafe91303",
+          "sequence": 4,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 57
+        },
+        {
+          "label": "reuse-262144",
+          "measurement_id": "3a88bb634a6e973ed87c9e18-reuse-262144",
+          "concurrency": 1,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 1518.4649999999992,
+          "cpu_ms": 132,
+          "isolate_id": "9f7edb71-99a8-4e41-bd64-7e7dafe91303",
+          "sequence": 5,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 137
+        },
+        {
+          "label": "empty",
+          "measurement_id": "dbb42fdc21d203c89692b938-empty",
+          "concurrency": 1,
+          "input_bytes": 0,
+          "status": 200,
+          "client_elapsed_ms": 288.60491700000057,
+          "cpu_ms": 1,
+          "isolate_id": "9f7edb71-99a8-4e41-bd64-7e7dafe91303",
+          "sequence": 6,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 1
+        },
+        {
+          "label": "decoded-overflow",
+          "measurement_id": "289bb3f6c89b16b620a5135f-decoded-overflow",
+          "concurrency": 1,
+          "input_bytes": 262145,
+          "status": 413,
+          "client_elapsed_ms": 568.1260000000002,
+          "cpu_ms": 5,
+          "isolate_id": null,
+          "sequence": null,
+          "initialization": null,
+          "wasm_linear_memory_bytes": null,
+          "summary": null,
+          "worker_wall_ms": 9
+        },
+        {
+          "label": "escaped-256KiB",
+          "measurement_id": "9b535a824fbf383efff9aee7-escaped-256KiB",
+          "concurrency": 1,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 11472.076250000002,
+          "cpu_ms": 6831,
+          "isolate_id": "f4abfda1-1867-4116-97f0-88d9cef6c905",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 88604672,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "issues": 0
+          },
+          "worker_wall_ms": 8265
+        },
+        {
+          "label": "raw-overflow",
+          "measurement_id": "a80845bb003270c00a81b330-raw-overflow",
+          "concurrency": 1,
+          "input_bytes": 0,
+          "status": 413,
+          "client_elapsed_ms": 1898.7649169999968,
+          "cpu_ms": 2,
+          "isolate_id": null,
+          "sequence": null,
+          "initialization": null,
+          "wasm_linear_memory_bytes": null,
+          "summary": null,
+          "worker_wall_ms": 2
+        },
+        {
+          "label": "concurrent-0",
+          "measurement_id": "17ef770f3dd7fb60799fc102-concurrent-0",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 641.3542080000007,
+          "cpu_ms": 247,
+          "isolate_id": "f4abfda1-1867-4116-97f0-88d9cef6c905",
+          "sequence": 2,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 88604672,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          },
+          "worker_wall_ms": 251
+        },
+        {
+          "label": "concurrent-2",
+          "measurement_id": "61ae35e1bfee398c89b33b3c-concurrent-2",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 2349.0953329999975,
+          "cpu_ms": 131,
+          "isolate_id": "9f7edb71-99a8-4e41-bd64-7e7dafe91303",
+          "sequence": 7,
+          "initialization": "warm",
+          "wasm_linear_memory_bytes": 89653248,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          },
+          "worker_wall_ms": 136
+        },
+        {
+          "label": "concurrent-1",
+          "measurement_id": "bb69fab9dd4a6961fc94ebf1-concurrent-1",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 6819.877625000001,
+          "cpu_ms": 4441,
+          "isolate_id": "472d0680-17af-48aa-bec8-52a8291683f6",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 83886080,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          },
+          "worker_wall_ms": 5467
+        },
+        {
+          "label": "concurrent-3",
+          "measurement_id": "e8c5e921563c0ea639c323e0-concurrent-3",
+          "concurrency": 4,
+          "input_bytes": 262144,
+          "status": 200,
+          "client_elapsed_ms": 26058.026584000003,
+          "cpu_ms": 5712,
+          "isolate_id": "312d305a-2593-4142-978d-8f5a35b895e6",
+          "sequence": 1,
+          "initialization": "cold",
+          "wasm_linear_memory_bytes": 89128960,
+          "summary": {
+            "errors": 1,
+            "warnings": 0,
+            "issues": 1
+          },
+          "worker_wall_ms": 6245
+        }
+      ],
+      "live_tail": [
+        {
+          "measurement_id": "66a60f65f2d5219e036a851e-reuse-1024",
+          "cpu_ms": 3,
+          "wall_ms": 4,
+          "outcome": "ok",
+          "event_timestamp": 1788970355428,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "3958286c8f35de91e06f338f-reuse-10240",
+          "cpu_ms": 8,
+          "wall_ms": 9,
+          "outcome": "ok",
+          "event_timestamp": 1788970355717,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "c96848fd76995e7f0fd6c36b-first-1KiB",
+          "cpu_ms": 4567,
+          "wall_ms": 5077,
+          "outcome": "ok",
+          "event_timestamp": 1788970350053,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "6640bcba082f688d8d458200-reuse-102400",
+          "cpu_ms": 55,
+          "wall_ms": 57,
+          "outcome": "ok",
+          "event_timestamp": 1788970356560,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "3a88bb634a6e973ed87c9e18-reuse-262144",
+          "cpu_ms": 132,
+          "wall_ms": 137,
+          "outcome": "ok",
+          "event_timestamp": 1788970357996,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "dbb42fdc21d203c89692b938-empty",
+          "cpu_ms": 1,
+          "wall_ms": 1,
+          "outcome": "ok",
+          "event_timestamp": 1788970358422,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "289bb3f6c89b16b620a5135f-decoded-overflow",
+          "cpu_ms": 5,
+          "wall_ms": 9,
+          "outcome": "ok",
+          "event_timestamp": 1788970358983,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "9b535a824fbf383efff9aee7-escaped-256KiB",
+          "cpu_ms": 6831,
+          "wall_ms": 8265,
+          "outcome": "ok",
+          "event_timestamp": 1788970362245,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "a80845bb003270c00a81b330-raw-overflow",
+          "cpu_ms": 2,
+          "wall_ms": 2,
+          "outcome": "ok",
+          "event_timestamp": 1788970372403,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "17ef770f3dd7fb60799fc102-concurrent-0",
+          "cpu_ms": 247,
+          "wall_ms": 251,
+          "outcome": "ok",
+          "event_timestamp": 1788970372800,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "61ae35e1bfee398c89b33b3c-concurrent-2",
+          "cpu_ms": 131,
+          "wall_ms": 136,
+          "outcome": "ok",
+          "event_timestamp": 1788970374578,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "bb69fab9dd4a6961fc94ebf1-concurrent-1",
+          "cpu_ms": 4441,
+          "wall_ms": 5467,
+          "outcome": "ok",
+          "event_timestamp": 1788970373761,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        },
+        {
+          "measurement_id": "e8c5e921563c0ea639c323e0-concurrent-3",
+          "cpu_ms": 5712,
+          "wall_ms": 6245,
+          "outcome": "ok",
+          "event_timestamp": 1788970392178,
+          "script_version": {
+            "id": "820f287a-573d-4b9c-925d-5021640dd2eb"
+          }
+        }
+      ],
+      "version_id": "820f287a-573d-4b9c-925d-5021640dd2eb",
+      "authentication": "Existing refreshed Wrangler OAuth; successful tail connection, no secret changes",
+      "preceding_failed_attempt": {
+        "label": "reuse-102400",
+        "error": "client TimeoutError",
+        "configured_timeout_ms": 30000,
+        "note": "The preceding runner did not emit partial results on failure; no CPU/client values are inferred for this failed attempt."
+      }
+    },
+    "graphql_memory_observation": {
+      "query": "query($account:String!,$start:Time!,$end:Time!) {viewer {accounts(filter:{accountTag:$account}) {workersInvocationsAdaptive(limit:100,filter:{scriptName:\"jp-quality-gate-validation\",datetime_geq:$start,datetime_leq:$end}) {dimensions{scriptVersion} sum{requests} max{memoryUsageBytes wasmMemoryBytes cpuTime wallTime}}}}}",
+      "window": {
+        "start": "2026-09-09T14:10:50Z",
+        "end": "2026-09-09T16:10:50Z"
+      },
+      "response": {
+        "data": {
+          "viewer": {
+            "accounts": [
+              {
+                "workersInvocationsAdaptive": [
+                  {
+                    "dimensions": {
+                      "scriptVersion": "e22d2446-4b0a-45b0-b1d0-876ae89fc113"
+                    },
+                    "max": {
+                      "cpuTime": 6001378,
+                      "memoryUsageBytes": 111039248,
+                      "wallTime": 7257234,
+                      "wasmMemoryBytes": 102236160
+                    },
+                    "sum": {
+                      "requests": 64
+                    }
+                  },
+                  {
+                    "dimensions": {
+                      "scriptVersion": "820f287a-573d-4b9c-925d-5021640dd2eb"
+                    },
+                    "max": {
+                      "cpuTime": 7769699,
+                      "memoryUsageBytes": 99435263,
+                      "wallTime": 9554720,
+                      "wasmMemoryBytes": 91750400
+                    },
+                    "sum": {
+                      "requests": 114
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "errors": null
+      },
+      "field_descriptions": {
+        "max.memoryUsageBytes": "Maximum V8 isolate memory usage across Worker invocations - bytes",
+        "max.wasmMemoryBytes": "Maximum WebAssembly linear memory usage across Worker invocations - bytes"
+      },
+      "scope": "Version-grouped invocation observations over the specified UTC window. Max aggregation is not a continuously observed peak or an upper bound for all isolate allocations. Do not add V8 and Wasm fields without a documented accounting relationship."
+    }
   }
 }

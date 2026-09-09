@@ -8,10 +8,20 @@ The local CLI is unchanged.
 
 **Insufficient evidence: STOP.**
 
-The measurements in [`feasibility.json`](./feasibility.json) are local Miniflare/workerd observations only.
-Cloudflare deployment measurements could not be collected: the default Wrangler OAuth token had expired and refresh failed, while a separately available credential verified as active but lacked usable Workers access to the configured validation account and returned `403 Authentication error`.
-Issue #9 remains unresolved, and downstream issue #10 remains blocked.
-No real Worker pass, same-isolate concurrency guarantee, billed CPU result, startup result, or 128 MB peak-isolate-memory result is claimed here.
+The deployed validation version is `820f287a-573d-4b9c-925d-5021640dd2eb`, with a 13,076.83 KiB upload and 35 ms global startup.
+Deployed results matched the native CLI in 18/18 comparisons, and authorization, malformed inputs, body boundaries, and concurrent distinct inputs returned the expected results.
+After OAuth renewal, 13 more HTTP requests were correlated with live tail CPU and wall time for this version; warm 1 KiB CPU was 3 ms.
+The earlier authentication failure is resolved for the current OAuth session.
+
+The GraphQL invocation memory maximum was 99,435,263 bytes for this version over the recorded two-hour window.
+This aggregate is not proof of continuous total peak isolate memory.
+Cold client elapsed time still exceeded 10 seconds: the latest longest request took 26,058.03 ms, while its corresponding Worker wall time was 6,245 ms.
+Four concurrent requests reached distinct isolates; same-isolate concurrent execution was not observed remotely.
+Issue #9 remains unresolved and issue #10 remains blocked.
+See [`FEASIBILITY.md`](./FEASIBILITY.md) and [`feasibility.json`](./feasibility.json) for exact scopes, timestamps, and historical measurements.
+
+The deployed Worker sets `GOMEMLIMIT=48MiB` in the standard Go runtime and returns isolate ID, request sequence, and `cold`/`waiting`/`warm` initialization metadata for authenticated successful requests.
+A controlled local comparison reduced sampled Wasm capacity; two further parser optimization trials regressed Wasm memory and were reverted without deployment.
 
 ## Reproduce the local path
 
@@ -59,14 +69,15 @@ Do not add `--tunnel` or otherwise expose this validation endpoint publicly.
 Use the same token from a separately managed shell or secret store when sending requests.
 Do not use the fixed token used by the test fixture as a production secret.
 
-If a deployed validation measurement is later authorized, set the secret and deploy only the validation configuration, each time naming it explicitly:
+For a future explicitly authorized validation deployment, use only the validation configuration:
 
 ```sh
 npx wrangler secret put JPQG_API_TOKEN --config wrangler.validation.jsonc
 npx wrangler deploy --config wrangler.validation.jsonc
 ```
 
-Those commands require valid Cloudflare authentication and were not executed because the configured account's Workers API returned 403.
+The user has already deployed the validation endpoint; do not repeat these commands merely to run HTTP checks or collect live logs.
+For deployed checks, use `https://jp-quality-gate-validation.ktutumi.workers.dev/v1/check` and the supplied `JPQG_API_TOKEN`, not the disposable local token.
 They must not be interpreted as a production deployment procedure.
 
 The local development and environment-variable guidance follows the [Wrangler worker commands](https://developers.cloudflare.com/workers/wrangler/commands/workers/), [Cloudflare local development](https://developers.cloudflare.com/workers/local-development/), and [Cloudflare environment variables](https://developers.cloudflare.com/workers/configuration/environment-variables/) documentation.
@@ -108,6 +119,29 @@ The handler does not log the body or token, and error responses do not echo the 
 
 ## Local profiling
 
+For a repeatable HTTP measurement using a fresh local Miniflare/workerd instance:
+
+```sh
+npm run build
+npm run --silent measure > .generated/local-measurement.json
+```
+
+After the instrumented validation build has been deployed, run the same synthetic cases against it with the existing secret supplied through `JPQG_API_TOKEN`:
+
+```sh
+JPQG_MEASURE_URL=https://jp-quality-gate-validation.ktutumi.workers.dev/v1/check \
+  npm run --silent measure > .generated/deployed-measurement.json
+```
+
+The remote command does not deploy or alter secrets, and fails if initialization metadata is absent.
+It records client elapsed time, concurrency, initialization state, isolate ID, sequence, and sampled Wasm capacity, without saving request bodies, headers, or tokens.
+Each request sends a random `x-jpqg-measurement` header and records its value as `measurement_id` for correlation with live tail; do not save raw tail headers containing the Bearer token.
+Remote requests may reach different isolates; inspect IDs and states rather than assuming sequential requests are warm.
+The runner itself leaves CPU and total peak isolate memory `null`: join request-correlated live tail CPU separately, and obtain evidence covering total peak memory before accepting feasibility.
+It emits JSON even on an in-run failure (`completed: false`) and exits nonzero; preserve that partial record. `completed: true` means the HTTP checks finished, not that all feasibility criteria passed.
+Concurrent requests all settle before results are emitted. HTTP status mismatches and transport failures are retained without saving response bodies or credentials.
+The runner uses a streaming body for raw overflow, matching the HTTP tests; an early Content-Length rejection can close the upload connection and race with a subsequent request's connection reuse in the local client.
+
 Build first, then start Wrangler with its inspector endpoint:
 
 ```sh
@@ -130,4 +164,5 @@ A zero non-idle sample does not establish zero CPU usage.
 
 [`FEASIBILITY.md`](./FEASIBILITY.md) contains the compact measurement tables, exact boundary and concurrency caveats, failed startup profiling attempts, deployment blocker, glossary, and STOP decision.
 [`feasibility.json`](./feasibility.json) preserves the full numeric record.
-The latest dry-run bundle value is `13,076.41 KiB`; the CPU and heap profiles remain from the earlier normal-path measurement run and were not remeasured after the error-path-only fix.
+The current dry-run bundle value is `13,076.83 KiB`; older CPU and heap profiles and deployed results describe earlier builds.
+The `improvement_measurements` section preserves the controlled local comparison; `improvement_measurements.deployed_verification` records the new deployed startup, HTTP, and correlated CPU results. Total peak memory and the cold latency condition remain unresolved.

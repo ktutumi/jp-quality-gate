@@ -18,6 +18,7 @@ type BridgeCheck = (requestJSON: string) => string;
 type ReadyCallback = (error: string | null) => void;
 
 type GoRuntime = {
+  env: Record<string, string>;
   importObject: WebAssembly.Imports;
   run(instance: WebAssembly.Instance): Promise<unknown>;
 };
@@ -60,6 +61,9 @@ const ALLOWED_OPTION_KEYS = [
 ];
 
 let corePromise: Promise<Core> | undefined;
+let isolateID: string | undefined;
+let coreReady = false;
+let requestSequence = 0;
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -224,6 +228,7 @@ function initializeCore(): Promise<Core> {
       }
       settled = true;
       clearTimeout(timeout);
+      coreReady = true;
       resolve({ check, memory: instanceMemory });
     };
 
@@ -234,6 +239,8 @@ function initializeCore(): Promise<Core> {
         return;
       }
       const go = new bridgeGlobal.Go();
+      // Go's soft GC target leaves room for JS and Wasm overhead; it is not an isolate limit.
+      go.env.GOMEMLIMIT = "48MiB";
       const instance = new WebAssembly.Instance(wasmModule, go.importObject);
       const memory = instance.exports.mem;
       if (!(memory instanceof WebAssembly.Memory)) {
@@ -252,7 +259,7 @@ function getCore(): Promise<Core> {
   return (corePromise ??= initializeCore());
 }
 
-function withMemoryMeta(rawResult: string, memory: WebAssembly.Memory): string {
+function withMemoryMeta(rawResult: string, memory: WebAssembly.Memory, diagnostics: JsonRecord): string {
   let result: unknown;
   try {
     result = JSON.parse(rawResult);
@@ -269,6 +276,7 @@ function withMemoryMeta(rawResult: string, memory: WebAssembly.Memory): string {
     throw INTERNAL_ERROR;
   }
   result.meta.validation_wasm_memory_bytes = memory.buffer.byteLength;
+  Object.assign(result.meta, diagnostics);
   try {
     return JSON.stringify(result);
   } catch {
@@ -309,6 +317,12 @@ export default {
     }
 
     let core: Core;
+    // Assigned before awaiting initialization so concurrent waiters are not called warm.
+    const diagnostics = {
+      validation_isolate_id: (isolateID ??= crypto.randomUUID()),
+      validation_request_sequence: ++requestSequence,
+      validation_initialization: coreReady ? "warm" : corePromise ? "waiting" : "cold",
+    };
     try {
       core = await getCore();
     } catch {
@@ -321,7 +335,7 @@ export default {
       if (typeof rawResult !== "string") {
         throw INTERNAL_ERROR;
       }
-      return new Response(withMemoryMeta(rawResult, core.memory), {
+      return new Response(withMemoryMeta(rawResult, core.memory, diagnostics), {
         status: 200,
         headers: {
           "cache-control": "no-store",
