@@ -22,7 +22,16 @@ test-integrations:
 	bun test integrations/omp/index.test.js
 	node --test integrations/pi/index.test.js
 
-check: test vet test-integrations
+check: test vet test-integrations check-cj-packed
 
 clean:
 	rm -rf ./bin
+
+.PHONY: pack-cj check-cj-packed
+pack-cj:
+	go run ./cmd/jpqg-pack-cjmodel
+
+check-cj-packed:
+	go run ./cmd/jpqg-pack-cjmodel --check
+	go test -tags=jpqg_packed_cjmodel ./internal/...
+	node workers/api/scripts/check-cj-bootstrap.mjs

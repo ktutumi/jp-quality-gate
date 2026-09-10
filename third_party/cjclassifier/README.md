@@ -20,3 +20,18 @@ The model contains statistical parameters derived from Chinese and Japanese Wiki
 ## Upstream reference
 
 See the [pinned upstream commit](https://github.com/jlpka/cjclassifier/commit/859c2bdca31c83b30a9d626fd04e2a79f081e61a) for the source project and its Apache-2.0 licensing terms.
+
+## Worker packed derivative
+
+`internal/embedded/data/cjmodel-v1.bin` is a deterministic, uncompressed derivative
+of the canonical CJClassifier 1.0.5 gzip listed above. The existing Go `ParseModel`
+parser supplies the final arrays; float64 unigrams/scalars, float32 bigrams, hash
+slots and offsets are preserved bit-for-bit. No model retraining, quantization,
+probability change, or language reordering is applied.
+
+Run `make pack-cj` to generate and `make check-cj-packed` to verify complete
+regeneration. The adjacent JSON manifest records source/file/content hashes,
+counts, format revision, and Go version. See [the v1 format](../../internal/cj/PACKED.md).
+The existing Apache-2.0 [LICENSE](LICENSE) and [NOTICE](NOTICE) apply to this derivative.
+Normal native CLI builds retain the canonical gzip; only the explicit
+`jpqg_packed_cjmodel` build tag selects the generated model.

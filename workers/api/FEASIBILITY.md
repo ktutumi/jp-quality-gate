@@ -1,11 +1,117 @@
 # Issue #9 の成立性記録
 
 > 作成日時: 2026-09-09 21:12
-> 更新日時: 2026-09-10 01:15
+> 更新日時: 2026-09-10 15:14
 
 ## 判定
 
 **証拠不足。STOP。**
+
+packed版 `2efc5d35-f637-425c-901a-d9063abc100f` のデプロイと、配備JS/Wasmのhash一致を確認した。
+非圧縮uploadは33,695.45KiB、global startupは20ms。
+今回の200要求はすべて期待statusで、計測できたcold27件のclient時間は最大5,095.85msだった。
+通常native CLIとの結果は、実行環境固有の診断meta4項目だけを除いて18/18件一致した。
+
+HTTP動作とcold短縮を確認したが、全体ピークメモリ、cold 100KiB、同一isolateで重なった初期化要求は未確認。
+CPU/wallは169計測要求中109件を照合でき、60件が欠落した。
+このためIssue #9は証拠不足を維持し、Issue #10を開始しない。
+最新の実測は次節、legacy版の10秒超過などの過去記録は後段に保持する。
+
+## packed版のデプロイ後検証（2026-09-10 15:11 JST）
+
+正本は `feasibility.json.packed_model_measurements.deployed_verification`。
+検証開始・終了時のactive deploymentは同一version、配分は100%だった。
+[Get script content API](https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/content/methods/get/)で配備moduleを読み、WasmとJSのbytes・SHA-256が `dist/packed/build-manifest.json` と一致することを確認した。
+ダウンロードした本文や認証情報は記録せず、module名・サイズ・hashだけを保存した。
+
+| 項目 | 結果 |
+| --- | --- |
+| version | `2efc5d35-f637-425c-901a-d9063abc100f` |
+| deployment時刻 | 2026-09-10 05:55:15 UTC |
+| 非圧縮upload | 33,695.45KiB（64MiB必須上限内、32MiB推奨目標超過） |
+| gzip upload（参考） | 13,551.90KiB |
+| global startup | 20ms（1,000ms必須上限内） |
+| Wasm SHA-256 | `f7d62bb769e8b683ce4d9abc8eed36e53869f5a35eae7d9c60d9bf5ba8587e69` |
+| JS SHA-256 | `ec3a17aac46878ead4316bcb1874908fe1cffda0de105c7e004f373217fc4a79` |
+
+### HTTP・互換性
+
+Workerへの検証要求は上限200件、同時数最大4、timeout30秒で実施した。
+内訳は計測系列169件と、独立にbuildしたtagなしnative CLIとの比較18件・認証/不正入力13件。
+期待したstatusは200が171件、413が14件、401が3件、400が10件、404/405が各1件で、不意のstatusや通信失敗は0件だった。
+品質不合格を示す正常200と、runtime失敗は区別する。
+
+日本語、簡体字・繁体字、mixed、Markdown/URL/code、絵文字、options、warningの昇格、空文字、1/10/100/256KiB、位置の異なる入力を比較した。
+`pass/summary/issues`の全要素・順序に加え、通常metaも一致した。
+除外したmetaは `validation_isolate_id`、`validation_request_sequence`、`validation_initialization`、`validation_wasm_memory_bytes` の4項目のみ。
+parity用client時間にはNodeプロセス起動の時間も含むため、以下のlatency統計には混ぜていない。
+
+### CPU・wall・client時間
+
+client時間はrequest開始からheaders・本文取得・JSON解析・正常結果確認まで。
+cold/warmは応答の初期化状態で分類し、クライアントの要求順からは決めない。
+以下は取得できた小標本の値であり、P95はnearest rankの経験分位点。
+欠落したCPUを0で補っていない。
+
+| ケース | HTTP n / CPU n | client中央値 ms | client最大 ms | CPU中央値 ms | CPU最大 ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| cold 1KiB | 3 / 1 | 1,796.82 | 1,949.54 | 1,123 | 1,123 |
+| cold 10KiB | 1 / 1 | 3,320.75 | 3,320.75 | 2,199 | 2,199 |
+| cold 256KiB（escape/並列を含む） | 23 / 22 | 2,999.03 | 5,095.85 | 1,456 | 2,414 |
+| warm 1KiB | 58 / 6 | 152.28 | 169.15 | 3 | 7 |
+
+計測系列の正常200は153件で、そのうちcold27件・warm126件。
+cold27件のclient P95は4,119.28ms、最大5,095.85msで、今回の観測では10秒超過はなかった。
+ただしcold 100KiBとwaitingは観測されていないため、全必須coldケースを確認済みとはしない。
+
+cold 1KiBの取得CPUは1,123msで、保存済みlegacyの4,567msから約75.4%短縮した。
+別時点・別isolateの観測比較であり、本番の制御されたA/B benchmarkではない。
+1,000ms未満という最適化目標はこの1標本では超過し、cold 1KiB CPUの目標標本数30も未達。
+warm 1KiB CPUの中央値3ms、P95/最大7msは取得6件の結果で、目標標本数100には届かない。
+
+169計測要求のうち109件をmeasurement IDでlive tailと照合し、すべて対象version・outcome `ok` だった。
+最初の4件はWebSocket接続完了を確認せずに送信したが、欠落原因が接続待ちだけだったとは断定しない。
+WranglerのJSONモードにはprettyモードの接続完了メッセージがないため、接続確認を待つだけでHTTPを送らなかった試行も記録した。
+その後は直接の `trace-v1` WebSocket openを確認してから送ったが、2件、さらに最後の54件でtailが欠落した。
+収集器はtransport error/closeの詳細を永続化しておらず、原因は未特定。
+Workerのobservability設定はnullで、保存済みログによる回収も設定されていなかった。
+HTTP結果をCPU取得成功と混同せず、追加CPU測定の前に収集器の切断・配送状態の記録を改善する。
+
+### 並列性
+
+4要求を同時送信する8組で、すべて位置の異なる結果を正しく返した。
+7組は4つの異なるisolateに分かれ、1組だけ4要求が3つのisolateへ届いた。
+同じisolateの2要求はwarm、連番21/22で、tailの開始時刻とwall時間から得られる区間も重ならなかった。
+クライアント側で重なっていても、実Worker内の同時処理や初期化待ちの証拠にはしない。
+
+### メモリ観測と成立性
+
+UTC 2026-09-10 05:55:15〜06:09:13を対象に、GraphQLでscript version・invocation status別に集計した。
+最終時間窓には201 invocations、status `success` の行だけがあり、他の失敗statusは観測されなかった。
+検証の200要求との一対一照合ではなく、時間窓集計として扱う。
+
+| 観測項目 | bytes |
+| --- | ---: |
+| V8 isolate memory・観測max | 107,176,215 |
+| V8 isolate memory・P50 | 91,840,950 |
+| V8 isolate memory・P90 | 101,816,710 |
+| V8 isolate memory・P99 | 104,690,696 |
+| V8 isolate memory・P999 | 107,176,216 |
+| Wasm memory・GraphQL max | 89,653,248 |
+| Wasm capacity・応答でのmax | 89,653,248 |
+
+V8観測maxは約107.18MB / 102.21MiBで、96MiBの参考線を超え、112MiB未満だった。
+legacyの以前の時間窓max 99,435,263 bytesより高いが、今回は大量指摘など入力構成が異なるため、同条件でのpacked退行と断定しない。
+P999とmaxの1byte差もAPIの返却値をそのまま保存した。
+
+[Cloudflareの定義](https://developers.cloudflare.com/workers/observability/metrics-and-analytics/#memory-usage)では、memory usageはinvocation時点の共有isolateメモリの観測とsamplingであり、処理中の連続ピークではない。
+Wasm容量とV8観測値は足し合わせない。
+`peak_isolate_memory_bytes: null`、`peak_memory_evidence: unmeasured`、Issue #9の`insufficient_evidence`を維持する。
+
+残作業は全体ピークの証拠、同一isolateで重なった初期化要求、cold 100KiBと十分なcold/warm CPU標本、tail欠落原因の切り分けである。
+今回の検証ではWorkerの再デプロイ、secret変更、Issue #10の開始は行っていない。
+
+## legacy版の過去判定
 
 ユーザーがデプロイした改修版 `820f287a-573d-4b9c-925d-5021640dd2eb` の成功ログから、非圧縮 bundle `13,076.83 KiB` と global startup `35 ms` を確認した。
 改修版と native CLI の結果互換性を追加で18/18件確認し、認証・不正入力13件、サイズ・境界・並列要求の3系列39件も期待した status だった。
@@ -17,6 +123,121 @@ JavaScript と Wasm を含むピーク時の isolate メモリは未取得であ
 cold と warm は区別できたが、cold でクライアント経過時間が10秒を超える要求が再現した。
 実 Worker の4並列要求は異なる isolate に届いたため、同一 isolate の同時処理の証拠にはしない。
 必須条件の証拠が揃っていないため、Issue #9 は未解決とし、後続の Issue #10 も開始しない。
+
+## packed CJモデルの実装・ローカル比較（デプロイ前の記録）
+
+2026-09-10のレビュー反映計画に従い、完成済みCJ配列をビルド時に生成する方式を実装した。
+通常native CLIはcanonical gzipを使い続け、Workerだけが `jpqg_packed_cjmodel` tagでsafe copy decoderへ切り替わる。
+`Load()`のcacheと初期化失敗の契約は保持し、自動fallbackは追加しない。
+形式・信頼境界・生成手順は [PACKED.md](../../internal/cj/PACKED.md) に記載した。
+
+正本は `feasibility.json.packed_model_measurements`。
+以下の3層を区別し、既存の実Worker記録は上書きしない。
+
+| 判定の層 | 現在の結果 |
+| --- | --- |
+| Migration correctness | この端末で全配列ビット一致、全980,423 keyのlookup、分類・GateResult互換性、破損拒否、生成再現性、bootstrapを確認 |
+| Packed optimization | ローカルcold短縮とWasm容量減少を確認。実WorkerのCPU/startupは未取得 |
+| Issue #9 feasibility | 証拠不足。実Workerのclient 10秒、全体ピークメモリ、同一isolateで重なった要求の確認が残る |
+
+### サイズと生成物
+
+- canonical gzip SHA-256: `b0fcb1e82dac11d2e11710012b563f7b19ee3e92ce6a01e7de806bcaadfc012f`
+- packed file SHA-256: `03f86a38687e8316f3bd97e109cc5864f68166ce5beb0df69be42fa20d3deccb`
+- packed bytes: **29,205,984**。復元配列: **29,205,848 bytes**。
+- embedded＋復元配列: **58,411,832 bytes**。モデル部分だけの予算であり、isolate全体の上界ではない。
+- occupiedは980,423 / 2,097,152 slots。float64/float32、slot/offsetの全要素を維持する。
+- 実サイズに基づきdecoderのfile/array防御上限を32MiBとした。要件の128MBをこの防御値で保証するものではない。
+
+同じソースとGo 1.27.1、Wrangler 4.130.0、互換日付2026-09-09からtagだけを切り替えた。
+Workerの `GOMEMLIMIT=48MiB` は双方で固定した。
+出力を `.generated/{legacy,packed}` / `dist/{legacy,packed}` に分離し、JS/Wasm/glue/config/modelのhashをbuild manifestに残した。
+基準commitは `8a7a1cf`、今回は未コミットの変更を含むため、その状態も明記した。
+
+| dry-run upload | legacy | packed |
+| --- | ---: | ---: |
+| 非圧縮 KiB | 13,237.73 | 33,695.45 |
+| gzip KiB（参考） | 9,086.97 | 13,576.78 |
+| global startup | 未取得 | 未取得 |
+
+packedは64MiBの必須上限内だが、32MiBの推奨目標を超える。
+以前のデプロイ版の35msをpacked版のstartupに転用しない。
+
+### ローカルHTTP比較
+
+fresh workerdを6種類の初回ケース×5回×2方式、計60プロセス起動した。
+各方式495要求、全990要求が期待statusで終了した。
+HTTP超過による期待した413は測定失敗に数えず、不意のstatus・通信失敗は0件だった。
+テスト等と実行が重なった先行60プロセスの予備系列は別保存し、この表に含めない。
+
+各coldケースのnは5、値はclient経過時間の中央値。
+小標本であり、母集団P95や絶対上限の保証には使わない。
+正本にはmin/median/nearest-rank P95/max、初期化状態、失敗数、全要求の数値を保存した。
+
+| 初回ケース | legacy ms | packed ms |
+| --- | ---: | ---: |
+| 1KiB | 1,172.88 | 376.12 |
+| 10KiB | 1,167.98 | 379.61 |
+| 100KiB | 1,205.38 | 396.70 |
+| 256KiB | 1,196.21 | 421.25 |
+| Unicode escape 256KiB | 1,222.95 | 430.86 |
+| 4並列256KiB内のcold要求 | 1,199.21 | 429.62 |
+
+cold 1KiBは約67.9%短縮したが、localの目安250msには未達。
+warm 1KiBの中央値は3.78→3.78ms、256KiBは42.44→44.52msだった。
+warm 1KiBのP95は5.81→10.15msと増えたため、中央値だけで全分布の退行なしとは扱わない。
+本番のwarm CPU目標は未評価。
+
+観測したWasm容量最大値は101,711,872→91,226,112 bytes（約97.00→87.00MiB）。
+JS heapなどを含む全体ピークではなく、`peak_isolate_memory_bytes: null` を維持する。
+
+初回4並列の各プロセスでは同じisolate IDを確認したが、初期化状態はcold1件＋warm3件だった。
+waitingは観測されず、初期化中の重なりがこの実験で証明されたとは扱わない。
+既存HTTPテストでは初期化cache、連番、結果混入なしを検証する。
+
+### Native benchmarkとlocal profile
+
+nativeはdarwin/arm64、Apple M4 Pro、Go 1.27.1、GOMEMLIMIT/GOGC指定なし。
+入力file読込を除き、legacy parserと、checksum＋安全性検証を含むpacked decodeを各5回測定した。
+
+| 中央値 | legacy | packed |
+| --- | ---: | ---: |
+| load ms/op | 244.60 | 19.09 |
+| B/op | 190,634,420 | 29,212,833 |
+| allocs/op | 1,983,156 | 7 |
+
+時間は約92.2%、累積割当てbytesは約84.7%、割当て回数は99%以上減少した。
+B/opは累積割当てでありpeak memoryではない。
+packedのB/opと論理配列bytesの差は約6,985 bytesだった。
+
+別のCDP profileでは、legacyのParseFloat・gzip・CJ parse・bigram insertionが目立った。
+packedではSHA-256のself sampleが約127.21ms、DecodePackedが約28.72ms、検証走査が約20.03msだった。
+これらは1回のlocalサンプル値で、正確な工程時間でもCloudflare課金CPUでもない。
+UnihanのJSON/gzip処理とGo runtimeの処理は残る。
+通常比較の計測中にはprofilerを接続せず、profile記録とbundle hashを別に保存した。
+
+### 検証と残作業
+
+`make check`（Go tests/vet、OMP 6/6、Pi 9/9、完全再生成、packed tag付きinternal tests、bootstrap）、Worker build/typecheck、HTTPを含むNodeテスト10/10が通った。
+15秒のdecoder fuzzも通った。
+全体テストは `JPQG_*` のprose設定を継承しない環境で実行した。
+最初の実行では環境のtextlint設定により既存 `TestProseCLI` の「設定欠落」ケースが成立せず失敗したが、通常CLIのコード変更は行っていない。
+
+独立レビューで指摘された入力言語列の厳密検証とカスタムパスのprovenanceを生成器側で修正した。
+追加テストと完全再生成checkを通し、canonicalからのbin/manifestは変更されなかった。
+
+リポジトリに既存CI定義はないため、外部CIの追加はせず `make check` に検証を組み込んだ。
+異なるnative architectureでの生成一致は未確認。
+
+このローカル記録の作成時点では、計画の「デプロイは運用者が明示的に実施する」に従い、packed版の追加デプロイを待っていた。
+その後のデプロイと実測は冒頭の最新節に記録した。
+validation設定は準備済みの `.generated/packed/index.ts` を指す。
+運用者のデプロイ後にversion IDとbuild manifestを対応付け、tail CPU/wall、client時間、startup、メモリ時間窓集計を取得する。
+初期の実Worker測定予算は1方式200要求・同時数4・timeout30秒を計画上の案とし、実行前に運用者と確定する。
+
+10秒条件は添付計画に従い、request開始からheaders・本文取得・JSON解析・正常結果確認までのclient経過時間で評価する。
+本番でcold 1KiB CPUが1秒以内になっても、その値をclient 10秒や全体メモリの代替にしない。
+全体ピーク、同一isolateの重なりなど未取得証拠を残してIssue #9成立とせず、Issue #10も開始しない。
 
 ## 必須条件に向けた改善（デプロイ確認済み）
 

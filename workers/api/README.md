@@ -8,20 +8,19 @@ The local CLI is unchanged.
 
 **Insufficient evidence: STOP.**
 
-The deployed validation version is `820f287a-573d-4b9c-925d-5021640dd2eb`, with a 13,076.83 KiB upload and 35 ms global startup.
-Deployed results matched the native CLI in 18/18 comparisons, and authorization, malformed inputs, body boundaries, and concurrent distinct inputs returned the expected results.
-After OAuth renewal, 13 more HTTP requests were correlated with live tail CPU and wall time for this version; warm 1 KiB CPU was 3 ms.
-The earlier authentication failure is resolved for the current OAuth session.
+The packed validation version is `2efc5d35-f637-425c-901a-d9063abc100f`, with a 33,695.45 KiB uncompressed upload and 20 ms global startup.
+Downloaded deployed JS and Wasm hashes match `dist/packed/build-manifest.json`; the version served 100% of traffic at the beginning and end of verification.
+All 200 validation requests returned the expected status. Eighteen comparisons matched the independent native legacy CLI, excluding only the four `validation_*` runtime diagnostic fields; authorization and malformed-input checks passed 13/13.
 
-The GraphQL invocation memory maximum was 99,435,263 bytes for this version over the recorded two-hour window.
-This aggregate is not proof of continuous total peak isolate memory.
-Cold client elapsed time still exceeded 10 seconds: the latest longest request took 26,058.03 ms, while its corresponding Worker wall time was 6,245 ms.
-Four concurrent requests reached distinct isolates; same-isolate concurrent execution was not observed remotely.
-Issue #9 remains unresolved and issue #10 remains blocked.
-See [`FEASIBILITY.md`](./FEASIBILITY.md) and [`feasibility.json`](./feasibility.json) for exact scopes, timestamps, and historical measurements.
+Across 169 instrumented requests, 27 were cold and all cold client times were below 10 seconds (maximum 5,095.85 ms). Cold 1 KiB client median was 1,796.82 ms (n=3); its one matched CPU sample was 1,123 ms. Warm 1 KiB CPU median was 3 ms (n=6).
+Live tail matched 109/169 requests; 60 CPU/wall records were missing, including the final 54-request series. These are HTTP successes with incomplete CPU evidence. The collector did not persist transport error/close details, so diagnose that loss before increasing the CPU sample budget.
 
-The deployed Worker sets `GOMEMLIMIT=48MiB` in the standard Go runtime and returns isolate ID, request sequence, and `cold`/`waiting`/`warm` initialization metadata for authenticated successful requests.
-A controlled local comparison reduced sampled Wasm capacity; two further parser optimization trials regressed Wasm memory and were reverted without deployment.
+GraphQL observed maximum V8 isolate memory of 107,176,215 bytes and Wasm memory of 89,653,248 bytes in the recorded version/time window. These invocation observations are not continuous total peak memory.
+Cold 100 KiB, waiting initialization, overlapping requests inside one isolate, and sufficient cold/warm CPU samples remain unverified. One concurrent group reused an isolate for two warm requests, but their recorded execution intervals did not overlap.
+Issue #9 remains unresolved and issue #10 remains blocked. The CPU target below 1,000 ms is not met by the one observed cold 1 KiB CPU sample; it is a separate optimization target from the original feasibility gates.
+See [`FEASIBILITY.md`](./FEASIBILITY.md) and [`feasibility.json`](./feasibility.json) for exact scopes, counts, missing records, and historical legacy measurements.
+
+The Worker retains `GOMEMLIMIT=48MiB` and returns isolate ID, request sequence, `cold`/`waiting`/`warm`, and sampled Wasm capacity metadata for authenticated successful requests.
 
 ## Reproduce the local path
 
@@ -34,7 +33,7 @@ npm run typecheck
 npm test
 ```
 
-`npm run build` compiles the standard Go/Wasm entry point and runs Wrangler's dry-run bundling with `wrangler.validation.jsonc`.
+`npm run build` verifies the generated CJ artifact, selects `jpqg_packed_cjmodel`, compiles the standard Go/Wasm entry point and runs Wrangler's dry-run bundling with `wrangler.validation.jsonc`.
 It does not deploy anything.
 `npm ci` installs the dependencies pinned in the committed lockfile.
 `npm test` is the package's configured test command (`node --test test/*.test.mjs`).
@@ -44,10 +43,14 @@ The focused HTTP command used for the reported scoped result is:
 node --test test/http.test.mjs
 ```
 
-Final local verification reported by the parent session is clean-environment `make check` PASS (Go tests and vet, OMP 6/6, Pi 9/9), Wasm `go vet` PASS, two consecutive `npm run build` passes at the same `13,076.41 KiB`, `npm run typecheck` PASS, and `npm test` 8/8 PASS.
+The earlier baseline verification reported by the parent session was clean-environment `make check` PASS (Go tests and vet, OMP 6/6, Pi 9/9), Wasm `go vet` PASS, two consecutive `npm run build` passes at the same `13,076.41 KiB`, `npm run typecheck` PASS, and `npm test` 8/8 PASS.
 These are local checks and do not establish deployed Worker behavior.
 
-The build creates ignored local artifacts under `.generated/` and `dist/`.
+The build creates ignored local artifacts under `.generated/packed/` and `dist/packed/`.
+`JPQG_CJ_VARIANT=legacy npm run build` creates a separate legacy bundle under `.generated/legacy/` and `dist/legacy/`; it does not overwrite the packed deployment entry.
+The validation configuration points to `.generated/packed/index.ts`, so build before running Wrangler.
+Each output directory contains `build-manifest.json` with model, module, runtime glue, config, toolchain, and base commit provenance.
+A dirty working tree is identified explicitly. Deployment/version evidence must be joined separately.
 The generated `wasm_exec.js` is copied without modification from the installed Go distribution selected by `go env GOROOT`; the corresponding Go `LICENSE` is copied alongside it.
 
 ## Local server and token
@@ -126,13 +129,17 @@ npm run build
 npm run --silent measure > .generated/local-measurement.json
 ```
 
-After the instrumented validation build has been deployed, run the same synthetic cases against it with the existing secret supplied through `JPQG_API_TOKEN`:
+After the packed validation build has explicitly been deployed and its version ID recorded, run the same synthetic cases against it with the existing secret supplied through `JPQG_API_TOKEN`:
 
 ```sh
-JPQG_MEASURE_URL=https://jp-quality-gate-validation.ktutumi.workers.dev/v1/check \
+JPQG_CJ_VARIANT=packed JPQG_MEASURE_BUILD_MANIFEST=dist/packed/build-manifest.json \
+  JPQG_DEPLOYED_VERSION="<recorded-version-id>" \
+  JPQG_MEASURE_URL=https://jp-quality-gate-validation.ktutumi.workers.dev/v1/check \
   npm run --silent measure > .generated/deployed-measurement.json
 ```
 
+The optional build manifest and expected version are operator-supplied claims; CPU and Worker wall time remain null until matched with live tail. The endpoint is recorded without URL credentials or query parameters.
+The remote variant label is operator-supplied (or `unverified` if omitted), not proof of the deployed model; correlate every measurement ID with the expected live-tail version.
 The remote command does not deploy or alter secrets, and fails if initialization metadata is absent.
 It records client elapsed time, concurrency, initialization state, isolate ID, sequence, and sampled Wasm capacity, without saving request bodies, headers, or tokens.
 Each request sends a random `x-jpqg-measurement` header and records its value as `measurement_id` for correlation with live tail; do not save raw tail headers containing the Bearer token.
@@ -141,6 +148,19 @@ The runner itself leaves CPU and total peak isolate memory `null`: join request-
 It emits JSON even on an in-run failure (`completed: false`) and exits nonzero; preserve that partial record. `completed: true` means the HTTP checks finished, not that all feasibility criteria passed.
 Concurrent requests all settle before results are emitted. HTTP status mismatches and transport failures are retained without saving response bodies or credentials.
 The runner uses a streaming body for raw overflow, matching the HTTP tests; an early Content-Length rejection can close the upload connection and race with a subsequent request's connection reuse in the local client.
+
+Choose `JPQG_MEASURE_FIRST=1024|10240|102400|262144|escaped|concurrent` to change the first case in each fresh local process. The runner also checks kana-free CJK, many findings, Markdown/astral text, warm sizes, boundaries, and four distinct concurrent inputs.
+Run each first-case/variant combination five times sequentially, without other builds or tests running. Keep all emitted JSON, including failures.
+Timing fields are cumulative milliseconds from request start to response headers, full body, and JSON parse; `client_elapsed_ms` additionally includes successful result validation. A single body read is used.
+Headers time includes connection, upload and server wait; it is not isolated server CPU or pure TTFB.
+
+For a separate local CDP profile of the first case:
+
+```sh
+JPQG_CJ_VARIANT=packed JPQG_MEASURE_PROFILE=1 npm run --silent measure > .generated/packed-profile-run.json
+```
+
+The runner saves `.generated/packed/cold-1024.cpuprofile` (variant/first-case dependent). Profiling is rejected for remote endpoints and its results must not be mixed with ordinary timing runs. It does not insert timers, sleeps or extra I/O into the production Worker.
 
 Build first, then start Wrangler with its inspector endpoint:
 
@@ -164,5 +184,16 @@ A zero non-idle sample does not establish zero CPU usage.
 
 [`FEASIBILITY.md`](./FEASIBILITY.md) contains the compact measurement tables, exact boundary and concurrency caveats, failed startup profiling attempts, deployment blocker, glossary, and STOP decision.
 [`feasibility.json`](./feasibility.json) preserves the full numeric record.
-The current dry-run bundle value is `13,076.83 KiB`; older CPU and heap profiles and deployed results describe earlier builds.
+The packed deployed bundle is `33,695.45 KiB`; the historical legacy upload was `13,076.83 KiB`.
+`packed_model_measurements` records the local packed comparison; its `deployed_verification` section records the verified packed deployment and 200-request validation.
 The `improvement_measurements` section preserves the controlled local comparison; `improvement_measurements.deployed_verification` records the new deployed startup, HTTP, and correlated CPU results. Total peak memory and the cold latency condition remain unresolved.
+
+## Packed artifact maintenance
+
+The packer requires canonical language columns in order, and records paths relative to its working directory; paths outside that directory are rejected.
+Run `make pack-cj` from the repository root after an intentional source/parser/format change, review the binary manifest, then run `make check`.
+Normal builds never regenerate the model. The lightweight Worker check rejects missing files, changed source/file/content hashes, and inconsistent manifests; complete regeneration additionally detects stale parser output.
+`make check-cj-packed` tests bootstrap in a disposable source copy and verifies exclusive embed selection. The ordinary native CLI keeps its legacy loader.
+
+The packed local comparison passed bitwise model parity and HTTP parity against the independently built legacy CLI. Five fresh cold runs per case and variant showed a cold 1 KiB median of 1,172.88 → 376.12 ms and sampled Wasm capacity maxima of 101,711,872 → 91,226,112 bytes.
+The later deployed verification confirms startup and a limited set of CPU samples; continuous total peak memory and Issue #9 feasibility remain unresolved. See the detailed record.

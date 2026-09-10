@@ -1,5 +1,5 @@
-import "../.generated/wasm_exec.js";
-import wasmModule from "../.generated/core.wasm";
+import "../.generated/packed/wasm_exec.js";
+import wasmModule from "../.generated/packed/core.wasm";
 
 type Options = {
   cj_min_cjk: number;

@@ -16,8 +16,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/ktutumi/jp-quality-gate/internal/embedded"
 )
 
 const (
@@ -395,7 +393,7 @@ func Load() (*Classifier, error) {
 		return embeddedCache.classifier, embeddedCache.err
 	}
 	embeddedCache.loaded = true
-	embeddedCache.classifier, embeddedCache.err = loadGZIPModel(embedded.CJModelGZIP, "bundled:cjlogprobs.gz", 0)
+	embeddedCache.classifier, embeddedCache.err = loadBundledModel()
 	return embeddedCache.classifier, embeddedCache.err
 }
 

@@ -12,7 +12,7 @@ import { Miniflare } from "miniflare";
 const testDir = dirname(fileURLToPath(import.meta.url));
 const apiRoot = resolve(testDir, "..");
 const repoRoot = resolve(apiRoot, "../..");
-const distRoot = resolve(apiRoot, "dist");
+const distRoot = resolve(apiRoot, "dist", process.env.JPQG_CJ_VARIANT ?? "packed");
 const workerEntry = resolve(distRoot, "index.js");
 const validationConfig = resolve(apiRoot, "wrangler.validation.jsonc");
 const testToken = "local-test-token-not-for-production";
@@ -67,6 +67,7 @@ function cleanCLIEnvironment() {
   }
   delete env.GOOS;
   delete env.GOARCH;
+  delete env.GOFLAGS;
   return env;
 }
 
